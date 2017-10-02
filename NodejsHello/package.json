@@ -1,9 +1,0 @@
-{
-  "name": "nodejs-hello",
-  "version": "0.0.0",
-  "description": "NodejsHello",
-  "main": "app.js",
-  "author": {
-    "name": "cristian"
-  }
-}
