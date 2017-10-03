@@ -10,7 +10,7 @@
     <meta name="description" content="{% page_attribute 'meta_description' %}">
     <meta name="author" content="">
 
-    <title>{% page_attribute 'page_title' %} - Financiar</title>
+    <title>{% block title %}{% page_attribute 'page_title' %}{% endblock %} - Financiar</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="{% static "vendor/bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">

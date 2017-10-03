@@ -75,7 +75,7 @@ INSTALLED_APPS = (
 #     'allauth.socialaccount.providers.openid',
 #     'allauth.socialaccount.providers.linkedin',
 #     'allauth.socialaccount.providers.linkedin_oauth2',
-    
+    'financiar',
 )
 
 LOGIN_REDIRECT_URL = '/'
