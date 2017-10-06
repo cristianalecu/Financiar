@@ -80,6 +80,7 @@ class SalesData(models.Model):
     year = models.PositiveSmallIntegerField(default=2017)
     month = models.PositiveSmallIntegerField(default=1)
     project = models.BooleanField(default = True)
+    open = models.BooleanField(default = True)
     value = models.FloatField(default = 0)
     updated = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='sales_data')
