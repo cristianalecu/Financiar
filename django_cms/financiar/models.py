@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 
 class Location(models.Model):
     name = models.CharField(max_length=100)
+    number = models.PositiveSmallIntegerField(default=1)
+    title = models.CharField(max_length=100, default=' ')
     
     def __str__(self):
             return self.name
@@ -82,9 +84,28 @@ class SalesData(models.Model):
     project = models.BooleanField(default = True)
     open = models.BooleanField(default = True)
     value = models.FloatField(default = 0)
+    maturity = models.BooleanField(default = True)
+    traffic = models.FloatField(default = 0)
     updated = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='sales_data')
     type = models.PositiveIntegerField(choices = DATA_TYPE, default=0)
 
     def __str__(self):
             return self.location + '_' + self.year + '_' + self.month 
+        
+    class Meta:
+        index_together = ["location", "year", "month"]
+#             indexes = [
+#                 models.Index(fields=['first_name'], name='first_name_idx'),
+#             ]        
+class TrendData(models.Model):
+    channel = models.ForeignKey(Channel, related_name='trend_data')
+    brand = models.ForeignKey(Brand, related_name='trend_data')
+    category = models.ForeignKey(Category, related_name='trend_data')
+    subcategory = models.ForeignKey(Subcategory, related_name='trend_data')
+    year = models.PositiveSmallIntegerField(default=2017)
+    month = models.PositiveSmallIntegerField(default=1)
+    trend = models.FloatField(default = 0)
+    inflation = models.FloatField(default = 0)
+    commercial_actions = models.FloatField(default = 0)
+    

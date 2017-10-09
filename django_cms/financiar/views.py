@@ -10,13 +10,14 @@ def salesdata_list(request):
         return redirect('/accounts/login/')
     
     processor = SalesXmlProcessor()
-    processor.process_xml_if_exists("sales.xml")
+    processor.process_xml_if_exists("sales.xml", request.user)
+    processor.process_xml_if_exists("trafic_maturity.xml", request.user)
     
-    sales = SalesData.objects.filter(year=2017)
+    sales = SalesData.objects.all()
     #sales_form = SalesDataForm() 
     context = {
         'page_title': "Tobacco sales",
-        'sales': sales,
+        'table': sales,
         #'sales_form': sales_form,
     }
     return render(request, 'table_datasort.html', context)
