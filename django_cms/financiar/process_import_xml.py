@@ -4,12 +4,14 @@ import xml.etree.ElementTree as ET
 
 from financiar.models import SalesData, Location, ConstNetwork, Benchmark,\
     SalesConcept, SalesConceptSize, Channel, Brand, Category, Subcategory,\
-    TrendData
+    CBIndicatorData, ChannelBrandIndicator
 from django.db import connection
 
 class SalesXmlProcessor():
     
     def __init__(self):
+#         CBIndicatorData.all().delete()
+#         ChannelBrandIndicator.all().delete()
 #         SalesData.objects.all().delete()
 #         Location.objects.all().delete()
 #         Channel.objects.all().delete()
@@ -20,9 +22,6 @@ class SalesXmlProcessor():
 #         SalesConcept.objects.all().delete()
 #         SalesConceptSize.objects.all().delete()
 #         ConstNetwork.objects.all().delete()
-        self.sales_data = SalesData.objects.all()
-        self.trend_data = TrendData.objects.all()
-        self.locations = Location.objects.all()
         self.channels = Channel.objects.all()
         self.brands = Brand.objects.all()
         self.categories = Category.objects.all()
@@ -31,63 +30,96 @@ class SalesXmlProcessor():
         self.sales_concepts = SalesConcept.objects.all()
         self.sales_concept_sizes = SalesConceptSize.objects.all()
         self.constnetworks = ConstNetwork.objects.all()
+        self.locations = Location.objects.all()
+        self.sales_data = SalesData.objects.all()
+        self.cbindicators = ChannelBrandIndicator.objects.all()
+        self.cbindicator_data = CBIndicatorData.objects.all()
         
     def get_object_by_name(self, attr_name, objects, classname):
         obj = objects.filter(name=attr_name)
         if obj.count() == 0 :
-            obj = classname.objects.create(name=attr_name)
+            obj = classname.objects.create(name=attr_name, user=self.user)
         else:
             obj = obj[0]
             
         return obj
     
-    def put_Trend(self, year, month, trend):
-        
-        obj = self.trend_data.filter({'channel_id': self.channel.id, 'brand_id':self.brand.id, 'year': year, 'month': month})
+    def get_location(self, location):
+        obj = self.locations.filter(name=location)
         if obj.count() == 0 :
-            obj = self.trend_data.objects.create(channel=self.channel, brand=self.brand, category=self.category, subcategory=self.subcategory, year=year, month=month, trend=trend)
+            obj = self.locations.create( 
+                name = location,
+                number = int(location),
+                channel = self.channel,
+                brand = self.brand,
+                category = self.category,
+                subcategory = self.subcategory,
+                ebenchmark = self.ebenchmark,
+                bbenchmark = self.bbenchmark,
+                sales_concept = self.sales_concept,
+                sales_concept_size = self.sales_concept_size,
+                cn_vs_H = self.cn_vs_H,
+                cn_vs_B = self.cn_vs_B,
+                user = self.user
+                )
         else:
             obj = obj[0]
-            obj.trend=trend
-        return obj
 
-    def put_Inflation(self, year, month, inflation):
-        
-        obj = self.trend_data.filter({'channel_id': self.channel.id, 'brand_id':self.brand.id, 'year': year, 'month': month})
-        if obj.count() == 0 :
-            obj = self.trend_data.objects.create(channel=self.channel, brand=self.brand, category=self.category, subcategory=self.subcategory, year=year, month=month, inflation=inflation)
-        else:
-            obj = obj[0]
-            obj.inflation=inflation
-        return obj
-
-    def put_Actions(self, year, month, actions):
-        
-        obj = self.trend_data.filter({'channel_id': self.channel.id, 'brand_id':self.brand.id, 'year': year, 'month': month})
-        if obj.count() == 0 :
-            obj = self.trend_data.objects.create(channel=self.channel, brand=self.brand, category=self.category, subcategory=self.subcategory, year=year, month=month, commercial_actions=actions)
-        else:
-            obj = obj[0]
-            obj.commercial_actions=actions
         return obj
     
-    def add_sales_data(self, year, month, value, open):
+    def add_sales_data(self, year, month, value, opened):
         self.sales_data.create( 
             location = self.location,
-            channel = self.channel,
-            brand = self.brand,
-            category = self.category,
-            subcategory = self.subcategory,
-            ebenchmark = self.ebenchmark,
-            bbenchmark = self.bbenchmark,
-            sales_concept = self.sales_concept,
-            sales_concept_size = self.sales_concept_size,
-            cn_vs_H = self.cn_vs_H,
-            cn_vs_B = self.cn_vs_B,
             year = year,
             month = month,
-            open = open,
+            open = opened,
             value = value,
+            user = self.user
+            )
+        
+    def get_cbindicator(self, channel, brand, category, subcategory):
+        name=channel+'/'+brand+'/'+category+'/'+subcategory
+        obj = self.cbindicators.filter(name=name)
+        if obj.count() == 0 :
+            self.channel = self.get_object_by_name(channel, self.channels, Channel)
+            self.brand = self.get_object_by_name(brand, self.brands, Brand)
+            self.category = self.get_object_by_name(category, self.categories, Category)
+            self.subcategory = self.get_object_by_name(subcategory, self.subcategories, Subcategory)
+            obj = self.locations.create( 
+                name = name,
+                channel = self.channel,
+                brand = self.brand,
+                category = self.category,
+                subcategory = self.subcategory,
+                user = self.user
+                )
+        else:
+            obj = obj[0]
+
+        return obj
+    
+    def add_cbindicator_trend(self, year, month, trend):
+        self.cbindicator_data.create( 
+            indicator = self.cbindicator,
+            year = year,
+            month = month,
+            trend = trend,
+            user = self.user
+            )
+    def add_cbindicator_inflation(self, year, month, trend):
+        self.cbindicator_data.create( 
+            indicator = self.cbindicator,
+            year = year,
+            month = month,
+            trend = trend,
+            user = self.user
+            )
+    def add_cbindicator_trend(self, year, month, trend):
+        self.cbindicator_data.create( 
+            indicator = self.cbindicator,
+            year = year,
+            month = month,
+            trend = trend,
             user = self.user
             )
     
@@ -99,6 +131,7 @@ class SalesXmlProcessor():
             tree = ET.parse(os.path.join(cwd,xml_filename))
             root = tree.getroot()
             self.user = user;
+            self.cursor = connection.cursor()
             for Worksheet in root.iter('{urn:schemas-microsoft-com:office:spreadsheet}Worksheet'):
                 for Table in Worksheet.iter('{urn:schemas-microsoft-com:office:spreadsheet}Table'):
                     for Row in Table.iter('{urn:schemas-microsoft-com:office:spreadsheet}Row'):
@@ -114,7 +147,7 @@ class SalesXmlProcessor():
                                     else:
                                         values.insert(coll,  "")
                                 coll = coll + 1
-                            if(values[0] == ""):
+                            if(values.count() == 0):
                                 break    
                             if(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Sales base'):
                                 self.location = self.get_object_by_name(values[2], self.locations, Location)
@@ -169,24 +202,23 @@ class SalesXmlProcessor():
                                 self.location.number = int(float(self.location.name))
                                 self.location.title = values[2]
                                 self.location.save()
-                                cursor = connection.cursor()
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[3]), self.location.id,2017, 8))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[4]), self.location.id,2017, 9))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[5]), self.location.id,2017, 10))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[6]), self.location.id,2017, 11))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[7]), self.location.id,2017, 12))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[8]), self.location.id,2018, 1))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[9]), self.location.id,2018, 2))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[10]),self.location.id,2018, 3))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[11]),self.location.id,2018, 4))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[12]),self.location.id,2018, 5))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[13]),self.location.id,2018, 6))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[14]),self.location.id,2018, 7))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[15]),self.location.id,2018, 8))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[16]),self.location.id,2018, 9))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[17]),self.location.id,2018, 10))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[18]),self.location.id,2018, 11))
-                                cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[19]),self.location.id,2018, 12))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[3]), self.location.id,2017, 8))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[4]), self.location.id,2017, 9))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[5]), self.location.id,2017, 10))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[6]), self.location.id,2017, 11))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[7]), self.location.id,2017, 12))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[8]), self.location.id,2018, 1))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[9]), self.location.id,2018, 2))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[10]),self.location.id,2018, 3))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[11]),self.location.id,2018, 4))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[12]),self.location.id,2018, 5))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[13]),self.location.id,2018, 6))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[14]),self.location.id,2018, 7))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[15]),self.location.id,2018, 8))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[16]),self.location.id,2018, 9))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[17]),self.location.id,2018, 10))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[18]),self.location.id,2018, 11))
+                                self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[19]),self.location.id,2018, 12))
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Trend'):                                   
                                 self.channel = self.get_object_by_name(values[1], self.channels, Channel)
                                 self.brand = self.get_object_by_name(values[2], self.brands, Brand)
