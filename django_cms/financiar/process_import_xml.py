@@ -106,22 +106,34 @@ class SalesXmlProcessor():
             trend = trend,
             user = self.user
             )
-    def add_cbindicator_inflation(self, year, month, trend):
-        self.cbindicator_data.create( 
-            indicator = self.cbindicator,
-            year = year,
-            month = month,
-            trend = trend,
-            user = self.user
-            )
-    def add_cbindicator_trend(self, year, month, trend):
-        self.cbindicator_data.create( 
-            indicator = self.cbindicator,
-            year = year,
-            month = month,
-            trend = trend,
-            user = self.user
-            )
+    def add_cbindicator_inflation(self, year, month, inflation):
+        obj = self.cbindicator_data.filter({"indicator": self.cbindicator, "year":year, "month":month})
+        if obj.count() == 0 :
+            self.cbindicator_data.create( 
+                    indicator = self.cbindicator,
+                    year = year,
+                    month = month,
+                    inflation = inflation,
+                    user = self.user
+                    )
+        else:
+            obj = obj[0]
+            obj.inflation = inflation
+            obj.save()
+    def add_cbindicator_actions(self, year, month, actions):
+        obj = self.cbindicator_data.filter({"indicator": self.cbindicator, "year":year, "month":month})
+        if obj.count() == 0 :
+            self.cbindicator_data.create( 
+                    indicator = self.cbindicator,
+                    year = year,
+                    month = month,
+                    actions = actions,
+                    user = self.user
+                    )
+        else:
+            obj = obj[0]
+            obj.actions = actions
+            obj.save()
     
     def process_xml_if_exists(self, xml_filename, user):
         cwd = os.getcwd()
@@ -147,10 +159,9 @@ class SalesXmlProcessor():
                                     else:
                                         values.insert(coll,  "")
                                 coll = coll + 1
-                            if(values.count() == 0):
+                            if(len(values) == 0):
                                 break    
                             if(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Sales base'):
-                                self.location = self.get_object_by_name(values[2], self.locations, Location)
                                 self.cn_vs_H = self.get_object_by_name(values[3], self.constnetworks, ConstNetwork)
                                 self.cn_vs_B = self.get_object_by_name(values[4], self.constnetworks, ConstNetwork)
                                 self.ebenchmark = self.get_object_by_name(values[5], self.benchmarks, Benchmark)
@@ -161,6 +172,7 @@ class SalesXmlProcessor():
                                 self.brand = self.get_object_by_name(values[10], self.brands, Brand)
                                 self.category = self.get_object_by_name(values[12], self.categories, Category)
                                 self.subcategory = self.get_object_by_name(values[13], self.subcategories, Subcategory)
+                                self.location = self.get_location(values[2])
                                 self.add_sales_data(2016, 1,  float(values[14]), False)
                                 self.add_sales_data(2016, 2,  float(values[15]), False)
                                 self.add_sales_data(2016, 3,  float(values[16]), False)
@@ -198,8 +210,7 @@ class SalesXmlProcessor():
                                 self.add_sales_data(2018, 11, float(values[48]), values[76]>'0')
                                 self.add_sales_data(2018, 12, float(values[49]), values[77]>'0')
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Traffic'):
-                                self.location = self.get_object_by_name(values[1], self.locations, Location)
-                                self.location.number = int(float(self.location.name))
+                                self.location = self.get_location(values[1])
                                 self.location.title = values[2]
                                 self.location.save()
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[3]), self.location.id,2017, 8))
@@ -219,92 +230,63 @@ class SalesXmlProcessor():
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[17]),self.location.id,2018, 10))
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[18]),self.location.id,2018, 11))
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[19]),self.location.id,2018, 12))
-                            elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Trend'):                                   
-                                self.channel = self.get_object_by_name(values[1], self.channels, Channel)
-                                self.brand = self.get_object_by_name(values[2], self.brands, Brand)
-                                self.category = self.get_object_by_name(values[2], self.categories, Category)
-                                self.subcategory = self.get_object_by_name(values[2], self.subcategories, Subcategory)
+                            elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Trend'):   
+                                self.cbindicator = self.get_cbindicator(values[1], values[2], values[3], values[4])                                
                                 if values[9] != "" :
-                                    self.put_Trend(2017,4,float(values[9]))
-                                self.put_Trend(2017,8 ,float(values[13]))
-                                self.put_Trend(2017,9 ,float(values[14]))
-                                self.put_Trend(2017,10,float(values[15]))
-                                self.put_Trend(2017,11,float(values[16]))
-                                self.put_Trend(2017,12,float(values[17]))
-                                self.put_Trend(2018,1 ,float(values[18]))
-                                self.put_Trend(2018,2 ,float(values[19]))
-                                self.put_Trend(2018,3 ,float(values[20]))
-                                self.put_Trend(2018,4 ,float(values[21]))
-                                self.put_Trend(2018,5 ,float(values[22]))
-                                self.put_Trend(2018,6 ,float(values[23]))
-                                self.put_Trend(2018,7 ,float(values[24]))
-                                self.put_Trend(2018,8 ,float(values[25]))
-                                self.put_Trend(2018,9 ,float(values[26]))
-                                self.put_Trend(2018,10,float(values[27]))
-                                self.put_Trend(2018,11,float(values[28]))
-                                self.put_Trend(2018,12,float(values[29]))
+                                    self.add_cbindicator_trend(2017,4,float(values[9]))
+                                self.add_cbindicator_trend(2017,8 ,float(values[13]))
+                                self.add_cbindicator_trend(2017,9 ,float(values[14]))
+                                self.add_cbindicator_trend(2017,10,float(values[15]))
+                                self.add_cbindicator_trend(2017,11,float(values[16]))
+                                self.add_cbindicator_trend(2017,12,float(values[17]))
+                                self.add_cbindicator_trend(2018,1 ,float(values[18]))
+                                self.add_cbindicator_trend(2018,2 ,float(values[19]))
+                                self.add_cbindicator_trend(2018,3 ,float(values[20]))
+                                self.add_cbindicator_trend(2018,4 ,float(values[21]))
+                                self.add_cbindicator_trend(2018,5 ,float(values[22]))
+                                self.add_cbindicator_trend(2018,6 ,float(values[23]))
+                                self.add_cbindicator_trend(2018,7 ,float(values[24]))
+                                self.add_cbindicator_trend(2018,8 ,float(values[25]))
+                                self.add_cbindicator_trend(2018,9 ,float(values[26]))
+                                self.add_cbindicator_trend(2018,10,float(values[27]))
+                                self.add_cbindicator_trend(2018,11,float(values[28]))
+                                self.add_cbindicator_trend(2018,12,float(values[29]))
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Inflation'):
-                                self.channel = self.get_object_by_name(values[1], self.channels, Channel)
-                                self.brand = self.get_object_by_name(values[2], self.brands, Brand)
-                                self.category = self.get_object_by_name(values[2], self.categories, Category)
-                                self.subcategory = self.get_object_by_name(values[2], self.subcategories, Subcategory)
-                                self.put_Inflation(2017,8 ,float(values[13]))
-                                self.put_Inflation(2017,9 ,float(values[14]))
-                                self.put_Inflation(2017,10,float(values[15]))
-                                self.put_Inflation(2017,11,float(values[16]))
-                                self.put_Inflation(2017,12,float(values[17]))
-                                self.put_Inflation(2018,1 ,float(values[18]))
-                                self.put_Inflation(2018,2 ,float(values[19]))
-                                self.put_Inflation(2018,3 ,float(values[20]))
-                                self.put_Inflation(2018,4 ,float(values[21]))
-                                self.put_Inflation(2018,5 ,float(values[22]))
-                                self.put_Inflation(2018,6 ,float(values[23]))
-                                self.put_Inflation(2018,7 ,float(values[24]))
-                                self.put_Inflation(2018,8 ,float(values[25]))
-                                self.put_Inflation(2018,9 ,float(values[26]))
-                                self.put_Inflation(2018,10,float(values[27]))
-                                self.put_Inflation(2018,11,float(values[28]))
-                                self.put_Inflation(2018,12,float(values[29]))
+                                self.cbindicator = self.get_cbindicator(values[1], values[2], values[3], values[4])                                
+                                self.add_cbindicator_inflation(2017,8 ,float(values[13]))
+                                self.add_cbindicator_inflation(2017,9 ,float(values[14]))
+                                self.add_cbindicator_inflation(2017,10,float(values[15]))
+                                self.add_cbindicator_inflation(2017,11,float(values[16]))
+                                self.add_cbindicator_inflation(2017,12,float(values[17]))
+                                self.add_cbindicator_inflation(2018,1 ,float(values[18]))
+                                self.add_cbindicator_inflation(2018,2 ,float(values[19]))
+                                self.add_cbindicator_inflation(2018,3 ,float(values[20]))
+                                self.add_cbindicator_inflation(2018,4 ,float(values[21]))
+                                self.add_cbindicator_inflation(2018,5 ,float(values[22]))
+                                self.add_cbindicator_inflation(2018,6 ,float(values[23]))
+                                self.add_cbindicator_inflation(2018,7 ,float(values[24]))
+                                self.add_cbindicator_inflation(2018,8 ,float(values[25]))
+                                self.add_cbindicator_inflation(2018,9 ,float(values[26]))
+                                self.add_cbindicator_inflation(2018,10,float(values[27]))
+                                self.add_cbindicator_inflation(2018,11,float(values[28]))
+                                self.add_cbindicator_inflation(2018,12,float(values[29]))
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Commercial actions'):
-                                self.channel = self.get_object_by_name(values[1], self.channels, Channel)
-                                self.brand = self.get_object_by_name(values[2], self.brands, Brand)
-                                self.category = self.get_object_by_name(values[2], self.categories, Category)
-                                self.subcategory = self.get_object_by_name(values[2], self.subcategories, Subcategory)
-                                self.put_Actions(2017,8 ,float(values[13]))
-                                self.put_Actions(2017,9 ,float(values[14]))
-                                self.put_Actions(2017,10,float(values[15]))
-                                self.put_Actions(2017,11,float(values[16]))
-                                self.put_Actions(2017,12,float(values[17]))
-                                self.put_Actions(2018,1 ,float(values[18]))
-                                self.put_Actions(2018,2 ,float(values[19]))
-                                self.put_Actions(2018,3 ,float(values[20]))
-                                self.put_Actions(2018,4 ,float(values[21]))
-                                self.put_Actions(2018,5 ,float(values[22]))
-                                self.put_Actions(2018,6 ,float(values[23]))
-                                self.put_Actions(2018,7 ,float(values[24]))
-                                self.put_Actions(2018,8 ,float(values[25]))
-                                self.put_Actions(2018,9 ,float(values[26]))
-                                self.put_Actions(2018,10,float(values[27]))
-                                self.put_Actions(2018,11,float(values[28]))
-                                self.put_Actions(2018,12,float(values[29]))
-                                
-                                
-                if(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Sales base'):
-                    self.locations.save()                                             
-                    self.channels.save()                                             
-                    self.brands.save()
-                    self.categories.save()
-                    self.subcategories.save()
-                    self.benchmarks.save()
-                    self.sales_concepts.save()
-                    self.sales_concept_sizes.save()
-                    self.constnetworks.save()
-                    self.sales_data.save()
-                elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Trend' or
-                     Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Inflation' or
-                     Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Commercial actions'):
-                    self.channels.save()                                             
-                    self.brands.save()
-                    self.categories.save()
-                    self.subcategories.save()
-                    self.trend_data.save()
+                                self.cbindicator = self.get_cbindicator(values[1], values[2], values[3], values[4])                                
+                                self.add_cbindicator_actions(2017,8 ,float(values[13]))
+                                self.add_cbindicator_actions(2017,9 ,float(values[14]))
+                                self.add_cbindicator_actions(2017,10,float(values[15]))
+                                self.add_cbindicator_actions(2017,11,float(values[16]))
+                                self.add_cbindicator_actions(2017,12,float(values[17]))
+                                self.add_cbindicator_actions(2018,1 ,float(values[18]))
+                                self.add_cbindicator_actions(2018,2 ,float(values[19]))
+                                self.add_cbindicator_actions(2018,3 ,float(values[20]))
+                                self.add_cbindicator_actions(2018,4 ,float(values[21]))
+                                self.add_cbindicator_actions(2018,5 ,float(values[22]))
+                                self.add_cbindicator_actions(2018,6 ,float(values[23]))
+                                self.add_cbindicator_actions(2018,7 ,float(values[24]))
+                                self.add_cbindicator_actions(2018,8 ,float(values[25]))
+                                self.add_cbindicator_actions(2018,9 ,float(values[26]))
+                                self.add_cbindicator_actions(2018,10,float(values[27]))
+                                self.add_cbindicator_actions(2018,11,float(values[28]))
+                                self.add_cbindicator_actions(2018,12,float(values[29]))
+
