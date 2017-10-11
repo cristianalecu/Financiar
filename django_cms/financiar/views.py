@@ -17,14 +17,15 @@ def locations_list(request):
     processor.process_xml_if_exists("trend.xml", request.user)
     
     locations = Location.objects.all().order_by('number')
+    #for p in Person.objects.raw('SELECT * FROM myapp_person'):
     
-    thead=['Location','CN_vs._H','CN_vs._B','E Benchmark','B Benchmark','Sales Concept','Sales Concept Size',
+    thead=['Location_Name','CN_vs._H','CN_vs._B','E Benchmark','B Benchmark','Sales Concept','Sales Concept Size',
            'Channel','Brand','Category','Subcategory']
     table = {}
     for location in locations:
-        table.insert(location.id, [str(location), location.cn_vs_H.name, location.cn_vs_B.name, location.ebenchmark.name, location.bbenchmark.name, 
+        table[location.id] = [str(location), location.cn_vs_H.name, location.cn_vs_B.name, location.ebenchmark.name, location.bbenchmark.name, 
                                    location.sales_concept.name, location.sales_concept_size.name,
-                                   location.channel.name, location.brand.name, location.category.name, location.subcategory.name])
+                                   location.channel.name, location.brand.name, location.category.name, location.subcategory.name]
         
     elapsed_time=time.time()-start_time
     context = {
@@ -43,10 +44,10 @@ def salesdata_list(request):
     locations = Location.objects.all().order_by('number')
     sales = SalesData.objects.all().order_by('location_id', 'year', 'month')
     
-    thead=['Location']
+    thead=['Location_Name']
     table = {}
     for location in locations:
-        table.insert(location.id, [str(location)])
+        table[location.id] = [str(location)]
         
     location = -1
     firstline = 0
@@ -56,6 +57,7 @@ def salesdata_list(request):
                 firstline = 1
             elif firstline == 1:
                     firstline = 2
+            location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
         table[sale.location_id].append(str(sale.value))
@@ -76,10 +78,10 @@ def opens_list(request):
     locations = Location.objects.all().order_by('number')
     sales = SalesData.objects.all().order_by('location_id', 'year', 'month')
     
-    thead=['Location']
+    thead=['Location_Name']
     table = {}
     for location in locations:
-        table.insert(location.id, [str(location)])
+        table[location.id] = [str(location)]
         
     location = -1
     firstline = 0
@@ -109,10 +111,10 @@ def traffic_list(request):
     locations = Location.objects.all().order_by('number')
     sales = SalesData.objects.all().order_by('location_id', 'year', 'month')
     
-    thead=['Location']
+    thead=['Location_Name']
     table = {}
     for location in locations:
-        table.insert(location.id, [str(location)])
+        table[location.id] = [str(location)]
         
     location = -1
     firstline = 0
@@ -144,7 +146,7 @@ def indicators_list(request):
     thead=['Indicator', 'Channel','Brand','Category','Subcategory']
     table = {}
     for indicator in indicators:
-        table.insert(indicator.id, [str(indicator.id), indicator.channel.name, indicator.brand.name, indicator.category.name, indicator.subcategory.name])
+        table[indicator.id] = [str(indicator.id), indicator.channel.name, indicator.brand.name, indicator.category.name, indicator.subcategory.name]
         
     elapsed_time=time.time()-start_time
     context = {
@@ -163,10 +165,10 @@ def trends_list(request):
     indicators = ChannelBrandIndicator.objects.all().order_by('id')
     cbindicatorsdata = CBIndicatorData.objects.all().order_by('indicator_id', 'year', 'month')
     
-    thead=['Indicator']
+    thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in indicators:
-        table.insert(indicator.id, [str(indicator)])
+        table[indicator.id] = [str(indicator)]
         
     indicator = -1
     firstline = 0
@@ -196,10 +198,10 @@ def inflation_list(request):
     indicators = ChannelBrandIndicator.objects.all().order_by('id')
     cbindicatorsdata = CBIndicatorData.objects.all().order_by('indicator_id', 'year', 'month')
     
-    thead=['Indicator']
+    thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in indicators:
-        table.insert(indicator.id, [str(indicator)])
+        table[indicator.id] = [str(indicator)]
         
     indicator = -1
     firstline = 0
@@ -229,10 +231,10 @@ def actions_list(request):
     indicators = ChannelBrandIndicator.objects.all().order_by('id')
     cbindicatorsdata = CBIndicatorData.objects.all().order_by('indicator_id', 'year', 'month')
     
-    thead=['Indicator']
+    thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in indicators:
-        table.insert(indicator.id, [str(indicator)])
+        table[indicator.id] = [str(indicator)]
         
     indicator = -1
     firstline = 0

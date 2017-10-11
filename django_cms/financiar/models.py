@@ -83,7 +83,41 @@ class Location(models.Model):
     user = models.ForeignKey(User, related_name='locations')
     
     def __str__(self):
-            return self.name + " - " + self.title
+            return self.name.zfill(3) + " - " + self.title
+
+class Lookup(models.Model):
+    name = models.CharField(max_length=100)
+
+        
+# select l.id, l.name, l.number, l.title, ch.name channel, b.name brand, c.name category, s.name subcategory, eb.name ebenchmark, bb.name bbenchmark,
+# sc.name sales_concept, scs.name sales_concept_size, cvh.name cn_vs_H, cvb.name cn_vs_B from financiar_location l
+# left join financiar_channel ch on ch.id = l.channel_id 
+# left join financiar_brand b on b.id = l.brand_id 
+# left join financiar_category c on c.id = l.category_id 
+# left join financiar_subcategory s on s.id = l.subcategory_id
+# left join financiar_benchmark eb on eb.id = l.ebenchmark_id
+# left join financiar_benchmark bb on bb.id = l.bbenchmark_id
+# left join financiar_salesconcept sc on sc.id = l.sales_concept_id
+# left join financiar_salesconceptsize scs on scs.id = l.sales_concept_size_id
+# left join financiar_constnetwork cvh on cvh.id = l.cn_vs_H_id
+# left join financiar_constnetwork cvb on cvb.id = l.cn_vs_B_id        
+class LocationFull(models.Model):
+    name = models.CharField(max_length=5)
+    number = models.PositiveSmallIntegerField(default=1)
+    title = models.CharField(max_length=100, default=' ')
+    channel =models.CharField(max_length=100, default=' ')
+    brand = models.CharField(max_length=100, default=' ')
+    category = models.CharField(max_length=100, default=' ')
+    subcategory =models.CharField(max_length=100, default=' ')
+    ebenchmark = models.CharField(max_length=100, default=' ')
+    bbenchmark = models.CharField(max_length=100, default=' ')
+    sales_concept = models.CharField(max_length=100, default=' ')
+    sales_concept_size = models.CharField(max_length=100, default=' ')
+    cn_vs_H = models.CharField(max_length=100, default=' ')
+    cn_vs_B = models.CharField(max_length=100, default=' ')
+    
+    def __str__(self):
+            return self.name.zfill(3) + " - " + self.title
         
 class SalesData(models.Model):
     DATA_TYPE = (
@@ -111,6 +145,16 @@ class SalesData(models.Model):
 #             indexes = [
 #                 models.Index(fields=['first_name'], name='first_name_idx'),
 #             ]        
+
+class CBIndicatorFull(models.Model):
+    name = models.CharField(max_length=100)
+    channel = models.CharField(max_length=100, default=' ')
+    brand = models.CharField(max_length=100, default=' ')
+    category = models.CharField(max_length=100, default=' ')
+    subcategory = models.CharField(max_length=100, default=' ')
+
+    def __str__(self):
+            return self.name
 
 class ChannelBrandIndicator(models.Model):
     name = models.CharField(max_length=100)

@@ -1,0 +1,9 @@
+#dataTables
+{
+	background-color: white;
+}
+
+#dataTables tbody tr td
+{
+	font-size: 12px;
+} 

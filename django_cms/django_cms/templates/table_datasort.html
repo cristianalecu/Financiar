@@ -31,9 +31,9 @@
                                  {% endfor %}
                               </tr></thead>
                               <tbody> 
-                                {% for row in tab_body %}
+                                {% for row, values in tab_body.items %}
                                  <tr>
-	                                 {% for xtd in row %} 
+	                                 {% for xtd in values %} 
 	                                     <td> {{ xtd }} </td>
 	                                 {% endfor %}
                                  </tr>
