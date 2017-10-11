@@ -22,7 +22,6 @@ class SalesXmlProcessor():
 #         SalesConcept.objects.all().delete()
 #         SalesConceptSize.objects.all().delete()
 #         ConstNetwork.objects.all().delete()
-        ChannelBrandIndicator.objects.all().delete()
         self.channels = Channel.objects.all()
         self.brands = Brand.objects.all()
         self.categories = Category.objects.all()
@@ -108,7 +107,7 @@ class SalesXmlProcessor():
             user = self.user
             )
     def add_cbindicator_inflation(self, year, month, inflation):
-        obj = self.cbindicator_data.filter({"indicator": self.cbindicator, "year":year, "month":month})
+        obj = self.cbindicator_data.filter(indicator_id=self.cbindicator.id, year=year, month=month)
         if obj.count() == 0 :
             self.cbindicator_data.create( 
                     indicator = self.cbindicator,
@@ -122,7 +121,7 @@ class SalesXmlProcessor():
             obj.inflation = inflation
             obj.save()
     def add_cbindicator_actions(self, year, month, actions):
-        obj = self.cbindicator_data.filter({"indicator": self.cbindicator, "year":year, "month":month})
+        obj = self.cbindicator_data.filter(indicator_id=self.cbindicator.id, year=year, month=month)
         if obj.count() == 0 :
             self.cbindicator_data.create( 
                     indicator = self.cbindicator,
@@ -140,13 +139,13 @@ class SalesXmlProcessor():
         cwd = os.getcwd()
         my_file = Path(os.path.join(cwd,xml_filename))
         if my_file.is_file():
-            first_row = 1
             tree = ET.parse(os.path.join(cwd,xml_filename))
             root = tree.getroot()
             self.user = user;
             self.cursor = connection.cursor()
             for Worksheet in root.iter('{urn:schemas-microsoft-com:office:spreadsheet}Worksheet'):
                 for Table in Worksheet.iter('{urn:schemas-microsoft-com:office:spreadsheet}Table'):
+                    first_row = 1
                     for Row in Table.iter('{urn:schemas-microsoft-com:office:spreadsheet}Row'):
                         values = []
                         coll = 0
