@@ -7091,17 +7091,6 @@
     <Cell ss:StyleID="s67"><Data ss:Type="Number">-3.2000000000000001E-2</Data><NamedCell
       ss:Name="_FilterDatabase"/></Cell>
    </Row>
-   <Row ss:Index="40">
-    <Cell ss:Index="11" ss:StyleID="s68"/>
-    <Cell ss:Index="14" ss:StyleID="s68"><Data ss:Type="Number">2E-3</Data></Cell>
-   </Row>
-   <Row>
-    <Cell ss:Index="17" ss:StyleID="s68"/>
-    <Cell ss:StyleID="s68"/>
-   </Row>
-   <Row>
-    <Cell ss:Index="11" ss:StyleID="s68"/>
-   </Row>
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
    <PageSetup>
