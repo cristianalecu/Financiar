@@ -6,4 +6,6 @@
 #dataTables tbody tr td
 {
 	font-size: 12px;
+	padding: 1px;
+	vertical-align: middle;
 } 

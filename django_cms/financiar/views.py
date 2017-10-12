@@ -2,9 +2,10 @@ from django.shortcuts import render
 from financiar.forms import SalesDataForm
 from django.shortcuts import render, redirect, get_object_or_404
 from financiar.models import SalesData, Location, ChannelBrandIndicator,\
-    CBIndicatorData
+    CBIndicatorData, LocationFull, Lookup, CBIndicatorFull
 from financiar.process_import_xml import SalesXmlProcessor
 import time
+
 
 def locations_list(request):
     if request.user.id is  None:
@@ -15,17 +16,26 @@ def locations_list(request):
     processor.process_xml_if_exists("sales.xml", request.user)
     processor.process_xml_if_exists("trafic_maturity.xml", request.user)
     processor.process_xml_if_exists("trend.xml", request.user)
-    
-    locations = Location.objects.all().order_by('number')
-    #for p in Person.objects.raw('SELECT * FROM myapp_person'):
-    
+
     thead=['Location_Name','CN_vs._H','CN_vs._B','E Benchmark','B Benchmark','Sales Concept','Sales Concept Size',
            'Channel','Brand','Category','Subcategory']
     table = {}
-    for location in locations:
-        table[location.id] = [str(location), location.cn_vs_H.name, location.cn_vs_B.name, location.ebenchmark.name, location.bbenchmark.name, 
-                                   location.sales_concept.name, location.sales_concept_size.name,
-                                   location.channel.name, location.brand.name, location.category.name, location.subcategory.name]
+    for location in LocationFull.objects.raw("select l.id, l.name, l.number, l.title, ch.name channel, b.name brand, c.name category, s.name subcategory, eb.name ebenchmark, bb.name bbenchmark, "
+            "sc.name sales_concept, scs.name sales_concept_size, cvh.name cn_vs_H, cvb.name cn_vs_B from financiar_location l "
+            "left join financiar_channel ch on ch.id = l.channel_id "
+            "left join financiar_brand b on b.id = l.brand_id "
+            "left join financiar_category c on c.id = l.category_id "
+            "left join financiar_subcategory s on s.id = l.subcategory_id "
+            "left join financiar_benchmark eb on eb.id = l.ebenchmark_id "
+            "left join financiar_benchmark bb on bb.id = l.bbenchmark_id "
+            "left join financiar_salesconcept sc on sc.id = l.sales_concept_id "
+            "left join financiar_salesconceptsize scs on scs.id = l.sales_concept_size_id "
+            "left join financiar_constnetwork cvh on cvh.id = l.cn_vs_H_id "
+            "left join financiar_constnetwork cvb on cvb.id = l.cn_vs_B_id "
+            "order by l.number "):        
+        table[location.id] = [location.name.zfill(3) + " - " + location.title, location.cn_vs_H, location.cn_vs_B, location.ebenchmark, location.bbenchmark, 
+                                   location.sales_concept, location.sales_concept_size,
+                                   location.channel, location.brand, location.category, location.subcategory]
         
     elapsed_time=time.time()-start_time
     context = {
@@ -41,13 +51,11 @@ def salesdata_list(request):
     
     start_time=time.time()
     
-    locations = Location.objects.all().order_by('number')
-    sales = SalesData.objects.all().order_by('location_id', 'year', 'month')
-    
     thead=['Location_Name']
     table = {}
-    for location in locations:
-        table[location.id] = [str(location)]
+    for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
+        table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
+    sales = SalesData.objects.all().only('location_id', 'year', 'month', 'value').order_by('location_id', 'year', 'month')
         
     location = -1
     firstline = 0
@@ -56,7 +64,7 @@ def salesdata_list(request):
             if firstline == 0:
                 firstline = 1
             elif firstline == 1:
-                    firstline = 2
+                firstline = 2
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
@@ -75,13 +83,11 @@ def opens_list(request):
     
     start_time=time.time()
     
-    locations = Location.objects.all().order_by('number')
-    sales = SalesData.objects.all().order_by('location_id', 'year', 'month')
-    
     thead=['Location_Name']
     table = {}
-    for location in locations:
-        table[location.id] = [str(location)]
+    for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
+        table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
+    sales = SalesData.objects.all().only('location_id', 'year', 'month', 'open').order_by('location_id', 'year', 'month')
         
     location = -1
     firstline = 0
@@ -90,7 +96,8 @@ def opens_list(request):
             if firstline == 0:
                 firstline = 1
             elif firstline == 1:
-                    firstline = 2
+                firstline = 2
+            location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
         table[sale.location_id].append("1" if sale.open else "0")
@@ -108,13 +115,11 @@ def traffic_list(request):
     
     start_time=time.time()
     
-    locations = Location.objects.all().order_by('number')
-    sales = SalesData.objects.all().order_by('location_id', 'year', 'month')
-    
     thead=['Location_Name']
     table = {}
-    for location in locations:
-        table[location.id] = [str(location)]
+    for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
+        table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
+    sales = SalesData.objects.all().only('location_id', 'year', 'month', 'traffic').order_by('location_id', 'year', 'month')
         
     location = -1
     firstline = 0
@@ -123,7 +128,8 @@ def traffic_list(request):
             if firstline == 0:
                 firstline = 1
             elif firstline == 1:
-                    firstline = 2
+                firstline = 2
+            location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
         table[sale.location_id].append(str(sale.traffic))
@@ -141,12 +147,16 @@ def indicators_list(request):
     
     start_time=time.time()
     
-    indicators = ChannelBrandIndicator.objects.all().order_by('id')
-    
     thead=['Indicator', 'Channel','Brand','Category','Subcategory']
     table = {}
-    for indicator in indicators:
-        table[indicator.id] = [str(indicator.id), indicator.channel.name, indicator.brand.name, indicator.category.name, indicator.subcategory.name]
+    for indicator in CBIndicatorFull.objects.raw("select i.id, i.name, ch.name channel, b.name brand, c.name category, s.name subcategory  from financiar_channelbrandindicator i "
+            "left join financiar_brand b on b.id = i.brand_id "
+            "left join financiar_channel ch on ch.id = i.channel_id "
+            "left join financiar_category c on c.id = i.category_id "
+            "left join financiar_subcategory s on s.id = i.subcategory_id "
+            "order by i.id"
+            ):
+        table[indicator.id] = [str(indicator.id), indicator.channel, indicator.brand, indicator.category, indicator.subcategory]
         
     elapsed_time=time.time()-start_time
     context = {
@@ -162,13 +172,11 @@ def trends_list(request):
     
     start_time=time.time()
     
-    indicators = ChannelBrandIndicator.objects.all().order_by('id')
-    cbindicatorsdata = CBIndicatorData.objects.all().order_by('indicator_id', 'year', 'month')
-    
     thead=['Indicator_Channel_Brand']
     table = {}
-    for indicator in indicators:
-        table[indicator.id] = [str(indicator)]
+    for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
+        table[indicator.id] = [str(indicator.id).zfill(2) + "-" + indicator.name]
+    cbindicatorsdata = CBIndicatorData.objects.all().only('indicator_id', 'year', 'month', 'trend').order_by('indicator_id', 'year', 'month')
         
     indicator = -1
     firstline = 0
@@ -177,7 +185,8 @@ def trends_list(request):
             if firstline == 0:
                 firstline = 1
             elif firstline == 1:
-                    firstline = 2
+                firstline = 2
+            indicator = cbindicator.indicator_id
         if firstline == 1:
             thead.append(str(cbindicator.month)+'.'+str(cbindicator.year))
         table[cbindicator.indicator_id].append(str(cbindicator.trend))
@@ -195,13 +204,11 @@ def inflation_list(request):
     
     start_time=time.time()
     
-    indicators = ChannelBrandIndicator.objects.all().order_by('id')
-    cbindicatorsdata = CBIndicatorData.objects.all().order_by('indicator_id', 'year', 'month')
-    
     thead=['Indicator_Channel_Brand']
     table = {}
-    for indicator in indicators:
-        table[indicator.id] = [str(indicator)]
+    for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
+        table[indicator.id] = [str(indicator.id).zfill(2) + "-" + indicator.name]
+    cbindicatorsdata = CBIndicatorData.objects.all().only('indicator_id', 'year', 'month', 'inflation').order_by('indicator_id', 'year', 'month')
         
     indicator = -1
     firstline = 0
@@ -210,7 +217,8 @@ def inflation_list(request):
             if firstline == 0:
                 firstline = 1
             elif firstline == 1:
-                    firstline = 2
+                firstline = 2
+            indicator = cbindicator.indicator_id
         if firstline == 1:
             thead.append(str(cbindicator.month)+'.'+str(cbindicator.year))
         table[cbindicator.indicator_id].append(str(cbindicator.inflation))
@@ -228,13 +236,11 @@ def actions_list(request):
     
     start_time=time.time()
     
-    indicators = ChannelBrandIndicator.objects.all().order_by('id')
-    cbindicatorsdata = CBIndicatorData.objects.all().order_by('indicator_id', 'year', 'month')
-    
     thead=['Indicator_Channel_Brand']
     table = {}
-    for indicator in indicators:
-        table[indicator.id] = [str(indicator)]
+    for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
+        table[indicator.id] = [str(indicator.id).zfill(2) + "-" + indicator.name]
+    cbindicatorsdata = CBIndicatorData.objects.all().only('indicator_id', 'year', 'month', 'commercial_actions').order_by('indicator_id', 'year', 'month')
         
     indicator = -1
     firstline = 0
@@ -243,7 +249,8 @@ def actions_list(request):
             if firstline == 0:
                 firstline = 1
             elif firstline == 1:
-                    firstline = 2
+                firstline = 2
+            indicator = cbindicator.indicator_id
         if firstline == 1:
             thead.append(str(cbindicator.month)+'.'+str(cbindicator.year))
         table[cbindicator.indicator_id].append(str(cbindicator.commercial_actions))
@@ -254,3 +261,11 @@ def actions_list(request):
         'tab_body': table,
     }
     return render(request, 'table_datasort.html', context)
+# <table id="table"
+#            data-toggle="table"
+#            data-toolbar="#toolbar"
+#            data-height="460"
+#            data-pagination="true"
+#            data-side-pagination="server"
+#            data-url="../json/data2.json">
+# <th data-field="id" data-sortable="true">ID</th>

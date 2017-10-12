@@ -22,7 +22,6 @@ class SalesXmlProcessor():
 #         SalesConcept.objects.all().delete()
 #         SalesConceptSize.objects.all().delete()
 #         ConstNetwork.objects.all().delete()
-        ChannelBrandIndicator.objects.all().delete()
         self.channels = Channel.objects.all()
         self.brands = Brand.objects.all()
         self.categories = Category.objects.all()
@@ -32,9 +31,7 @@ class SalesXmlProcessor():
         self.sales_concept_sizes = SalesConceptSize.objects.all()
         self.constnetworks = ConstNetwork.objects.all()
         self.locations = Location.objects.all()
-        self.sales_data = SalesData.objects.all()
         self.cbindicators = ChannelBrandIndicator.objects.all()
-        self.cbindicator_data = CBIndicatorData.objects.all()
         
     def get_object_by_name(self, attr_name, objects, classname):
         obj = objects.filter(name=attr_name)
@@ -69,7 +66,7 @@ class SalesXmlProcessor():
         return obj
     
     def add_sales_data(self, year, month, value, opened):
-        self.sales_data.create( 
+        Location.objects.get_or_create( 
             location = self.location,
             year = year,
             month = month,
@@ -100,7 +97,7 @@ class SalesXmlProcessor():
         return obj
     
     def add_cbindicator_trend(self, year, month, trend):
-        self.cbindicator_data.create( 
+        CBIndicatorData.objects.get_or_create( 
             indicator = self.cbindicator,
             year = year,
             month = month,
@@ -108,7 +105,7 @@ class SalesXmlProcessor():
             user = self.user
             )
     def add_cbindicator_inflation(self, year, month, inflation):
-        obj = self.cbindicator_data.filter({"indicator": self.cbindicator, "year":year, "month":month})
+        obj = self.cbindicator_data.filter(indicator_id=self.cbindicator.id, year=year, month=month)
         if obj.count() == 0 :
             self.cbindicator_data.create( 
                     indicator = self.cbindicator,
@@ -122,31 +119,31 @@ class SalesXmlProcessor():
             obj.inflation = inflation
             obj.save()
     def add_cbindicator_actions(self, year, month, actions):
-        obj = self.cbindicator_data.filter({"indicator": self.cbindicator, "year":year, "month":month})
+        obj = self.cbindicator_data.filter(indicator_id=self.cbindicator.id, year=year, month=month)
         if obj.count() == 0 :
             self.cbindicator_data.create( 
                     indicator = self.cbindicator,
                     year = year,
                     month = month,
-                    actions = actions,
+                    commercial_actions = actions,
                     user = self.user
                     )
         else:
             obj = obj[0]
-            obj.actions = actions
+            obj.commercial_actions = actions
             obj.save()
     
     def process_xml_if_exists(self, xml_filename, user):
         cwd = os.getcwd()
         my_file = Path(os.path.join(cwd,xml_filename))
         if my_file.is_file():
-            first_row = 1
             tree = ET.parse(os.path.join(cwd,xml_filename))
             root = tree.getroot()
             self.user = user;
             self.cursor = connection.cursor()
             for Worksheet in root.iter('{urn:schemas-microsoft-com:office:spreadsheet}Worksheet'):
                 for Table in Worksheet.iter('{urn:schemas-microsoft-com:office:spreadsheet}Table'):
+                    first_row = 1
                     for Row in Table.iter('{urn:schemas-microsoft-com:office:spreadsheet}Row'):
                         values = []
                         coll = 0
@@ -273,6 +270,10 @@ class SalesXmlProcessor():
                                     self.add_cbindicator_trend(2018,11,float(values[21]))
                                     self.add_cbindicator_trend(2018,12,float(values[22]))
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Inflation'):
+                                try:
+                                    self.cbindicator_data
+                                except NameError:
+                                    self.cbindicator_data = CBIndicatorData.objects.all()
                                 self.cbindicator = self.get_cbindicator(values[1], values[2], values[3], values[4])                                
                                 self.add_cbindicator_inflation(2017,8 ,float(values[6]))
                                 self.add_cbindicator_inflation(2017,9 ,float(values[7]))
@@ -292,7 +293,10 @@ class SalesXmlProcessor():
                                 self.add_cbindicator_inflation(2018,11,float(values[21]))
                                 self.add_cbindicator_inflation(2018,12,float(values[22]))
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Commercial actions'):
-                                self.cbindicator = self.get_cbindicator(values[1], values[2], values[3], values[4])                                
+                                try:
+                                    self.cbindicator_data
+                                except NameError:
+                                    self.cbindicator_data = CBIndicatorData.objects.all()
                                 self.add_cbindicator_actions(2017,8 ,float(values[6]))
                                 self.add_cbindicator_actions(2017,9 ,float(values[7]))
                                 self.add_cbindicator_actions(2017,10,float(values[8]))

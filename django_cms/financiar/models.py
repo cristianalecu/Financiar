@@ -88,19 +88,6 @@ class Location(models.Model):
 class Lookup(models.Model):
     name = models.CharField(max_length=100)
 
-        
-# select l.id, l.name, l.number, l.title, ch.name channel, b.name brand, c.name category, s.name subcategory, eb.name ebenchmark, bb.name bbenchmark,
-# sc.name sales_concept, scs.name sales_concept_size, cvh.name cn_vs_H, cvb.name cn_vs_B from financiar_location l
-# left join financiar_channel ch on ch.id = l.channel_id 
-# left join financiar_brand b on b.id = l.brand_id 
-# left join financiar_category c on c.id = l.category_id 
-# left join financiar_subcategory s on s.id = l.subcategory_id
-# left join financiar_benchmark eb on eb.id = l.ebenchmark_id
-# left join financiar_benchmark bb on bb.id = l.bbenchmark_id
-# left join financiar_salesconcept sc on sc.id = l.sales_concept_id
-# left join financiar_salesconceptsize scs on scs.id = l.sales_concept_size_id
-# left join financiar_constnetwork cvh on cvh.id = l.cn_vs_H_id
-# left join financiar_constnetwork cvb on cvb.id = l.cn_vs_B_id        
 class LocationFull(models.Model):
     name = models.CharField(max_length=5)
     number = models.PositiveSmallIntegerField(default=1)
