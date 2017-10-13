@@ -9,7 +9,7 @@ import time
 
 def locations_list(request):
     if request.user.id is  None:
-        return redirect('/accounts/login/')
+        return redirect('/accounts/login/') 
     
     start_time=time.time()
     processor = SalesXmlProcessor()
