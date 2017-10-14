@@ -32,7 +32,7 @@ def locations_list(request):
             "left join financiar_salesconceptsize scs on scs.id = l.sales_concept_size_id "
             "left join financiar_constnetwork cvh on cvh.id = l.cn_vs_H_id "
             "left join financiar_constnetwork cvb on cvb.id = l.cn_vs_B_id "
-            "order by l.number "):        
+            "order by l.number "): 
         table[location.id] = [location.name.zfill(3) + " - " + location.title, location.cn_vs_H, location.cn_vs_B, location.ebenchmark, location.bbenchmark, 
                                    location.sales_concept, location.sales_concept_size,
                                    location.channel, location.brand, location.category, location.subcategory]
