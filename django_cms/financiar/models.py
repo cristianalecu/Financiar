@@ -121,7 +121,7 @@ class SalesData(models.Model):
     year = models.PositiveSmallIntegerField(default=2017)
     month = models.PositiveSmallIntegerField(default=1)
     open = models.BooleanField(default = True)
-    #matur = models.FloatField(default = 0)
+    matur = models.FloatField(default = 0)
     value = models.FloatField(default = 0)
     traffic = models.FloatField(default = 0)
     updated = models.DateTimeField(auto_now_add=True)
