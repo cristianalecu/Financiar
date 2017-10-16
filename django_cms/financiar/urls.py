@@ -11,4 +11,4 @@ urlpatterns = [
     url(r'^inflation/$', views.inflation_list, name='inflation_list'),
     url(r'^actions/$', views.actions_list, name='actions_list'),
     url(r'^finalsales/$', views.finalsales_list, name='finalsales_list'),
-]
+    url(r'^graffic/$', views.graffic_list, name='graffic_list'),]

@@ -2,7 +2,7 @@ from django.shortcuts import render
 from financiar.forms import SalesDataForm
 from django.shortcuts import render, redirect, get_object_or_404
 from financiar.models import SalesData, Location, ChannelBrandIndicator,\
-    CBIndicatorData, LocationFull, Lookup, CBIndicatorFull
+    CBIndicatorData, LocationFull, Lookup, CBIndicatorFull, GraficData
 from financiar.process_import_xml import SalesXmlProcessor
 import time
 
@@ -343,6 +343,61 @@ def finalsales_list(request):
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Tobacco Final Sales " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
+        'tab_head': thead,
+        'tab_body': table,
+    }
+    return render(request, 'table_datasort.html', context)
+
+def graffic_list(request):
+    if request.user.id is  None:
+        return redirect('/accounts/login/')
+    
+    start_time=time.time()
+    
+    thead=['Sum']
+    table = {'trend':['01 Trend'],
+             'trendprc':['02 Trend%'],
+             'infla':['03 Inflation'],
+             'inflaprc':['04 Inflation%'],
+             'comm':['05 Commercial act'],
+             'commprc':['06Commercial act%'],
+             'matur':['07 Maturity'],
+             'maturprc':['08 Maturity%'],
+             'traffic':['09 Traffic'],
+             'trafficprc':['10 Traffic%'],
+             'tot':['99 Total'],
+             }
+    sales = GraficData.objects.raw("select s.year * 12 + s.month id, s.year, s.month,  "
+"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.trend,0))  else 0  end) trend, "
+"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.inflation,0))  else 0  end) inflation, "
+"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.commercial_actions,0))  else 0  end) commercial_actions, "
+"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (s.matur)  else 0  end) matur, "
+"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * ((1-s.matur+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)) * s.traffic)  else 0  end) traffic, "
+"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * ((1-s.matur+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)) + (-s.matur+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)) * s.traffic)  else s.value  end) fullx  "
+"from financiar_salesdata s  "
+"left join financiar_location l on l.id = s.location_id "
+"left outer join financiar_channelbrandindicator ind  "
+"      on ind.channel_id = l.channel_id and ind.brand_id = l.brand_id and ind.category_id=l.category_id and ind.subcategory_id=l.subcategory_id  "
+"left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month  "
+"where l.cn_vs_B_id=2 "
+"group by s.year, s.month     order by s.year, s.month")
+        
+    for sale in sales:
+        thead.append(str(sale.month)+'.'+str(sale.year))
+        table['trend'].append("{0:.2f}".format(sale.trend))
+        table['trendprc'].append("{0:.2f}%".format(sale.trend / sale.fullx * 100))
+        table['infla'].append("{0:.2f}".format(sale.inflation))
+        table['inflaprc'].append("{0:.2f}%".format(sale.inflation / sale.fullx * 100))
+        table['comm'].append("{0:.2f}".format(sale.commercial_actions))
+        table['commprc'].append("{0:.2f}%".format(sale.commercial_actions / sale.fullx * 100))
+        table['matur'].append("{0:.2f}".format(sale.matur))
+        table['maturprc'].append("{0:.2f}%".format(sale.matur / sale.fullx * 100))
+        table['traffic'].append("{0:.2f}".format(sale.traffic))
+        table['trafficprc'].append("{0:.2f}%".format(sale.traffic / sale.fullx * 100))
+        table['tot'].append("{0:.2f}".format(sale.fullx))
+    elapsed_time=time.time()-start_time
+    context = {
+        'page_title': "Tobacco GRAFFIC " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
         'tab_head': thead,
         'tab_body': table,
     }

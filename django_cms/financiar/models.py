@@ -166,3 +166,12 @@ class CBIndicatorData(models.Model):
     updated = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='cbindicatordata')
     
+class GraficData(models.Model):
+    year = models.PositiveSmallIntegerField(default=2017)
+    month = models.PositiveSmallIntegerField(default=1)
+    trend = models.FloatField(default = 0)
+    inflation = models.FloatField(default = 0)
+    commercial_actions = models.FloatField(default = 0)
+    matur = models.FloatField(default = 0)
+    traffic = models.FloatField(default = 0)
+    fullx = models.FloatField(default = 0)
