@@ -239,7 +239,7 @@ class SalesXmlProcessor():
                                         if self.location.id == 360 and i == 18:
                                             matur = 0
                                         if i > 0 and values[i+1] > '0':
-                                            for j in range(0, i-1):
+                                            for j in range(0, i):
                                                 if values[j+1] > '0':
                                                     matur += 1
                                             if matur < 12:

@@ -241,7 +241,7 @@ def trend_impact_list(request):
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
-    sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, "
+    sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
             "CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN "
             "  s.value * COALESCE(cb.trend, 0) else 0 end value, "
             "  s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
@@ -265,7 +265,7 @@ def trend_impact_list(request):
         table[sale.location_id].append(str(sale.value))
     elapsed_time=time.time()-start_time
     context = {
-        'page_title': "Tobacco sales base " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
+        'page_title': "Tobacco Trend impact " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
         'tab_head': thead,
         'tab_body': table,
     }
@@ -281,7 +281,7 @@ def traffic_impact_list(request):
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
-    sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, "
+    sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
             "CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN "
             "  s.value * s.traffic else 0 end value, "
             "  s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
@@ -302,13 +302,13 @@ def traffic_impact_list(request):
         table[sale.location_id].append(str(sale.value))
     elapsed_time=time.time()-start_time
     context = {
-        'page_title': "Tobacco sales base " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
+        'page_title': "Tobacco Traffic impact " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
         'tab_head': thead,
         'tab_body': table,
     }
     return render(request, 'table_datasort.html', context)
 
-def actions_list(request):
+def finalsales_list(request):
     if request.user.id is  None:
         return redirect('/accounts/login/')
     
@@ -318,7 +318,14 @@ def actions_list(request):
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
-    sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.value, s.matur, s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s  "
+    sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
+            "CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN "
+            "  s.value * (1-s.matur+ coalesce(cb.trend+cb.inflation+cb.commercial_actions,0) + (-s.matur+coalesce(cb.trend+cb.inflation+cb.commercial_actions,0) * s.traffic))  else s.value * (1 - s.matur + (-s.matur) * s.traffic)   end value, "
+            "  s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
+            "left join financiar_location l on l.id = s.location_id "
+            "left outer join financiar_channelbrandindicator ind "
+            "      on ind.channel_id = l.channel_id and ind.brand_id = l.brand_id and ind.category_id=l.category_id and ind.subcategory_id=l.subcategory_id "
+            "left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month "
             "order by s.location_id, s.year, s.month")
         
     location = -1
@@ -332,46 +339,46 @@ def actions_list(request):
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
-        table[sale.location_id].append(str(sale.matur))
+        table[sale.location_id].append(str(sale.value))
     elapsed_time=time.time()-start_time
     context = {
-        'page_title': "Tobacco sales base " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
+        'page_title': "Tobacco Final Sales " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
         'tab_head': thead,
         'tab_body': table,
     }
     return render(request, 'table_datasort.html', context)
 
-# def actions_list(request):
-#     if request.user.id is  None:
-#         return redirect('/accounts/login/')
-#       
-#     start_time=time.time()
-#       
-#     thead=['Indicator_Channel_Brand']
-#     table = {}
-#     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
-#         table[indicator.id] = [str(indicator.id).zfill(2) + "-" + indicator.name]
-#     cbindicatorsdata = CBIndicatorData.objects.all().only('indicator_id', 'year', 'month', 'commercial_actions').order_by('indicator_id', 'year', 'month')
-#           
-#     indicator = -1
-#     firstline = 0
-#     for cbindicator in cbindicatorsdata:
-#         if indicator != cbindicator.indicator_id :
-#             if firstline == 0:
-#                 firstline = 1
-#             elif firstline == 1:
-#                 firstline = 2
-#             indicator = cbindicator.indicator_id
-#         if firstline == 1:
-#             thead.append(str(cbindicator.month)+'.'+str(cbindicator.year))
-#         table[cbindicator.indicator_id].append("{0:.2f}%".format(cbindicator.commercial_actions * 100))
-#     elapsed_time=time.time()-start_time
-#     context = {
-#         'page_title': "Commercial actions " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
-#         'tab_head': thead,
-#         'tab_body': table,
-#     }
-#     return render(request, 'table_datasort.html', context)
+def actions_list(request):
+    if request.user.id is  None:
+        return redirect('/accounts/login/')
+       
+    start_time=time.time()
+       
+    thead=['Indicator_Channel_Brand']
+    table = {}
+    for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
+        table[indicator.id] = [str(indicator.id).zfill(2) + "-" + indicator.name]
+    cbindicatorsdata = CBIndicatorData.objects.all().only('indicator_id', 'year', 'month', 'commercial_actions').order_by('indicator_id', 'year', 'month')
+           
+    indicator = -1
+    firstline = 0
+    for cbindicator in cbindicatorsdata:
+        if indicator != cbindicator.indicator_id :
+            if firstline == 0:
+                firstline = 1
+            elif firstline == 1:
+                firstline = 2
+            indicator = cbindicator.indicator_id
+        if firstline == 1:
+            thead.append(str(cbindicator.month)+'.'+str(cbindicator.year))
+        table[cbindicator.indicator_id].append("{0:.2f}%".format(cbindicator.commercial_actions * 100))
+    elapsed_time=time.time()-start_time
+    context = {
+        'page_title': "Commercial actions " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
+        'tab_head': thead,
+        'tab_body': table,
+    }
+    return render(request, 'table_datasort.html', context)
 
 
 # <table id="table"
