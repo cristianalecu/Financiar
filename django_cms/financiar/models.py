@@ -169,6 +169,7 @@ class CBIndicatorData(models.Model):
 class GraficData(models.Model):
     year = models.PositiveSmallIntegerField(default=2017)
     month = models.PositiveSmallIntegerField(default=1)
+    base = models.FloatField(default = 0)
     trend = models.FloatField(default = 0)
     inflation = models.FloatField(default = 0)
     commercial_actions = models.FloatField(default = 0)

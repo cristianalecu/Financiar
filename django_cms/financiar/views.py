@@ -5,6 +5,7 @@ from financiar.models import SalesData, Location, ChannelBrandIndicator,\
     CBIndicatorData, LocationFull, Lookup, CBIndicatorFull, GraficData
 from financiar.process_import_xml import SalesXmlProcessor
 import time
+import locale
 
 
 def locations_list(request):
@@ -353,21 +354,22 @@ def graffic_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Sum']
-    table = {'trend':['01 Trend'],
+    table = {'base':['00 Base'],
+             'trend':['01 Trend'],
              'trendprc':['02 Trend%'],
              'infla':['03 Inflation'],
              'inflaprc':['04 Inflation%'],
-             'comm':['05 Commercial act'],
-             'commprc':['06Commercial act%'],
+             'comm':['05 Commercial'],
+             'commprc':['06Commercial%'],
              'matur':['07 Maturity'],
              'maturprc':['08 Maturity%'],
              'traffic':['09 Traffic'],
              'trafficprc':['10 Traffic%'],
              'tot':['99 Total'],
              }
-    sales = GraficData.objects.raw("select s.year * 12 + s.month id, s.year, s.month,  "
+    sales = GraficData.objects.raw("select s.year * 12 + s.month id, s.year, s.month, sum(s.value) base, "
 "sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.trend,0))  else 0  end) trend, "
 "sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.inflation,0))  else 0  end) inflation, "
 "sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.commercial_actions,0))  else 0  end) commercial_actions, "
@@ -384,17 +386,18 @@ def graffic_list(request):
         
     for sale in sales:
         thead.append(str(sale.month)+'.'+str(sale.year))
-        table['trend'].append("{0:.2f}".format(sale.trend))
+        table['base'].append(locale.format("%.0f",sale.base,True))
+        table['trend'].append(locale.format("%.3f",sale.trend,True))
         table['trendprc'].append("{0:.2f}%".format(sale.trend / sale.fullx * 100))
-        table['infla'].append("{0:.2f}".format(sale.inflation))
+        table['infla'].append(locale.format("%.3f",sale.inflation,True))
         table['inflaprc'].append("{0:.2f}%".format(sale.inflation / sale.fullx * 100))
-        table['comm'].append("{0:.2f}".format(sale.commercial_actions))
+        table['comm'].append(locale.format("%.3f",sale.commercial_actions,True))
         table['commprc'].append("{0:.2f}%".format(sale.commercial_actions / sale.fullx * 100))
-        table['matur'].append("{0:.2f}".format(sale.matur))
+        table['matur'].append(locale.format("%.3f",sale.matur,True))
         table['maturprc'].append("{0:.2f}%".format(sale.matur / sale.fullx * 100))
-        table['traffic'].append("{0:.2f}".format(sale.traffic))
+        table['traffic'].append(locale.format("%.3f",sale.traffic,True))
         table['trafficprc'].append("{0:.2f}%".format(sale.traffic / sale.fullx * 100))
-        table['tot'].append("{0:.2f}".format(sale.fullx))
+        table['tot'].append(locale.format("%.0f",sale.fullx,True))
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Tobacco GRAFFIC " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
