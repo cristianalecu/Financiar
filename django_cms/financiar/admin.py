@@ -12,4 +12,6 @@ admin.site.register(finmodels.SalesConceptSize)
 admin.site.register(finmodels.Location)
 
 admin.site.register(finmodels.SalesData)
+admin.site.register(finmodels.ChannelBrandIndicator)
+admin.site.register(finmodels.CBIndicatorData)
 

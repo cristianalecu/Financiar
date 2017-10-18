@@ -51,23 +51,26 @@ def locations_list(request):
     return render(request, 'table_datasort.html', context)
 
 def location_new(request):
-    if not request.user.is_staff():
+    if not request.user.is_staff:
         return redirect('users:login')
+    return redirect('financiar:locations_list')
     
-def location_edit(request):
-    if not request.user.is_staff():
+def location_edit(request, pk):
+    if not request.user.is_staff:
         return redirect('users:login')
+    return redirect('financiar:locations_list')
     
-def location_delete(request):
-    if not request.user.is_staff():
+def location_delete(request, pk):
+    if not request.user.is_staff:
         return redirect('users:login')
+    return redirect('financiar:locations_list')
     
 def salesdata_list(request):
     if request.user.id is  None:
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -85,7 +88,7 @@ def salesdata_list(request):
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
-        table[sale.location_id].append(str(sale.value))
+        table[sale.location_id].append(locale.format("%.2f",sale.value,True))
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Tobacco sales base " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
@@ -131,7 +134,7 @@ def traffic_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -149,7 +152,7 @@ def traffic_list(request):
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
-        table[sale.location_id].append(str(sale.traffic))
+        table[sale.location_id].append("{0:.2f}%".format(sale.traffic * 100))
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Traffic " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
@@ -163,18 +166,55 @@ def indicators_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
-    thead=['Indicator', 'Channel','Brand','Category','Subcategory']
+    locale.setlocale(locale.LC_NUMERIC, 'English')
+    thead=['Indicator', 'Channel','Brand','Category','Subcategory', 'Ebenchmarks', 'Sales Concept', 'Sales Concept Size']
     table = {}
-    for indicator in CBIndicatorFull.objects.raw("select i.id, i.name, ch.name channel, b.name brand, c.name category, s.name subcategory  from financiar_channelbrandindicator i "
-            "left join financiar_brand b on b.id = i.brand_id "
-            "left join financiar_channel ch on ch.id = i.channel_id "
-            "left join financiar_category c on c.id = i.category_id "
-            "left join financiar_subcategory s on s.id = i.subcategory_id "
-            "order by i.id"
-            ):
-        table[indicator.id] = [str(indicator.id), indicator.channel, indicator.brand, indicator.category, indicator.subcategory]
-        
+#     for indicator in CBIndicatorFull.objects.raw("select i.id, i.name, ch.name channel, b.name brand, c.name category, s.name subcategory  from financiar_channelbrandindicator i "
+#             "left join financiar_brand b on b.id = i.brand_id "
+#             "left join financiar_channel ch on ch.id = i.channel_id "
+#             "left join financiar_category c on c.id = i.category_id "
+#             "left join financiar_subcategory s on s.id = i.subcategory_id "
+#             "order by i.id"
+#             ):
+#         table[indicator.id] = [str(indicator.id), indicator.channel, indicator.brand, indicator.category, indicator.subcategory]
+    for indicator in ChannelBrandIndicator.objects.all().order_by('id'):
+        channels = ""
+        brands = ""
+        categs = ""
+        subcategs = ""
+        ebench = ""
+        sconcepts = ""
+        sconceptsz = ""
+        for obj in indicator.channels.all():
+            channels += (", " + obj.name)
+        for obj in indicator.brands.all():
+            brands += (", " + obj.name)
+        for obj in indicator.categories.all():
+            categs += (", " + obj.name)
+        for obj in indicator.subcategories.all():
+            subcategs += (", " + obj.name)
+        for obj in indicator.ebenchmarks.all():
+            ebench += (", " + obj.name)
+        for obj in indicator.salesconcepts.all():
+            sconcepts += (", " + obj.name)
+        for obj in indicator.salesconceptsizes.all():
+            sconceptsz += (", " + obj.name)
+        if len(channels) > 0 :
+            channels = channels[2:]
+        if len(brands) > 0 :
+            brands = brands[2:]
+        if len(categs) > 0 :
+            categs = categs[2:]
+        if len(subcategs) > 0 :
+            subcategs = subcategs[2:]
+        if len(ebench) > 0 :
+            ebench = ebench[2:]
+        if len(sconcepts) > 0 :
+            sconcepts = sconcepts[2:]
+        if len(sconceptsz) > 0 :
+            sconceptsz = sconceptsz[2:]
+        table[indicator.id] = [str(indicator.id), channels, brands,categs,subcategs,ebench,sconcepts,sconceptsz]
+
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Channel Brand indicators " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
@@ -188,7 +228,7 @@ def trends_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
@@ -220,7 +260,7 @@ def inflation_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
@@ -252,7 +292,7 @@ def trend_impact_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -278,7 +318,7 @@ def trend_impact_list(request):
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
-        table[sale.location_id].append(str(sale.value))
+        table[sale.location_id].append(locale.format("%.0f",sale.value,True))
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Tobacco Trend impact " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
@@ -292,7 +332,7 @@ def traffic_impact_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -315,7 +355,7 @@ def traffic_impact_list(request):
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
-        table[sale.location_id].append(str(sale.value))
+        table[sale.location_id].append(locale.format("%.0f",sale.value,True))
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Tobacco Traffic impact " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
@@ -329,7 +369,7 @@ def finalsales_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    
+    locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -355,7 +395,7 @@ def finalsales_list(request):
             location = sale.location_id
         if firstline == 1:
             thead.append(str(sale.month)+'.'+str(sale.year))
-        table[sale.location_id].append(str(sale.value))
+        table[sale.location_id].append(locale.format("%.0f",sale.value,True))
     elapsed_time=time.time()-start_time
     context = {
         'page_title': "Tobacco Final Sales " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
@@ -426,7 +466,7 @@ def actions_list(request):
         return redirect('/accounts/login/')
        
     start_time=time.time()
-       
+    locale.setlocale(locale.LC_NUMERIC, 'English')   
     thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):

@@ -22,7 +22,9 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             {{ page_title }}
+                            {% if link_new %}
                             <a title="Add new" style="float:right;" href="{% url link_new %}" class="btn btn-floating-action btn-primary"><span class="glyphicon glyphicon-plus"></span></a>
+                            {% endif %}
                         </div>
                         <div class="panel-body">
                            <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables" data-page-list="[20, 100, 400]"> 
@@ -38,7 +40,7 @@
 	                                     <td>  {{ xtd }} </td>
 	                                 {% endfor %}
 	                                 {% if link_new %}
-	                                 
+	                                 {% endif %}
                                  </tr>
                                 {% endfor %}
                               </tbody>

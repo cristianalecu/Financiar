@@ -79,6 +79,8 @@ class Location(models.Model):
     sales_concept_size = models.ForeignKey(SalesConceptSize, related_name='locations')
     cn_vs_H = models.ForeignKey(ConstNetwork, related_name='locations_vsH')
     cn_vs_B = models.ForeignKey(ConstNetwork, related_name='locations_vsB')
+    opened_from = models.DateField(default='2016-01-01')
+    opened_to = models.DateField(default='2019-12-01')
     updated = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='locations')
     
@@ -102,6 +104,8 @@ class LocationFull(models.Model):
     sales_concept_size = models.CharField(max_length=100, default=' ')
     cn_vs_H = models.CharField(max_length=100, default=' ')
     cn_vs_B = models.CharField(max_length=100, default=' ')
+    opened_from = models.DateField(default='2016-01-01')
+    opened_to = models.DateField(default='2019-12-01')
     
     def __str__(self):
             return self.name.zfill(3) + " - " + self.title
@@ -146,10 +150,24 @@ class CBIndicatorFull(models.Model):
 
 class ChannelBrandIndicator(models.Model):
     name = models.CharField(max_length=100)
-    channel = models.ForeignKey(Channel, related_name='indicators')
-    brand = models.ForeignKey(Brand, related_name='indicators')
-    category = models.ForeignKey(Category, related_name='indicators')
-    subcategory = models.ForeignKey(Subcategory, related_name='indicators')
+    bbenchmark = models.BooleanField(default = 1)
+    ebenchmarks = models.ManyToManyField(Benchmark, blank=True)
+    bchannel = models.BooleanField(default = 1)
+    channels = models.ManyToManyField(Channel, blank=True)
+    bbrand =  models.BooleanField(default = 1)
+    brands = models.ManyToManyField(Brand, blank=True)
+    bcategory =  models.BooleanField(default = 0)
+    categories = models.ManyToManyField(Category, blank=True)
+    bsubcategory =  models.BooleanField(default = 0)
+    subcategories = models.ManyToManyField(Subcategory, blank=True)
+    bsalesconcept =  models.BooleanField(default = 0)
+    salesconcepts = models.ManyToManyField(SalesConcept, blank=True)
+    bsalesconceptsize =  models.BooleanField(default = 0)
+    salesconceptsizes = models.ManyToManyField(SalesConceptSize, blank=True)
+    
+# class BookForm(forms.ModelForm):
+#     themes = forms.ModelMultipleChoiceField(queryset=Thema.objects, widget=forms.CheckboxSelectMultiple(), required=False)
+            
     updated = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='cbindicators')
     
