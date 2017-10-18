@@ -45,7 +45,7 @@ class SalesXmlProcessor():
     def get_location(self, location):
         obj = self.locations.filter(name=location)
         if obj.count() == 0 :
-            obj = self.locations.create( 
+            obj = Location.objects.create( 
                 name = location,
                 number = int(location),
                 channel = self.channel,
@@ -230,6 +230,24 @@ class SalesXmlProcessor():
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[17]),self.location.id,2018, 10))
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[18]),self.location.id,2018, 11))
                                 self.cursor.execute("UPDATE financiar_salesdata SET traffic = %s where location_id=%s and year=%s and month=%s", (float(values[19]),self.location.id,2018, 12))
+                            elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Opens'):
+                                self.location = self.get_location(values[0])
+                                for i in range(0,24):
+                                    matur = 0
+                                    j = 0
+                                    if(self.location.ebenchmark_id == 2):
+                                        if self.location.id == 360 and i == 18:
+                                            matur = 0
+                                        if i > 0 and values[i+1] > '0':
+                                            for j in range(0, i):
+                                                if values[j+1] > '0':
+                                                    matur += 1
+                                            if matur < 12:
+                                                matur = 0.2
+                                            else:
+                                                matur=0.1
+                                    self.cursor.execute("UPDATE financiar_salesdata SET open = %s, matur=%s where location_id=%s and year=%s and month=%s", (values[i+1], matur, self.location.id, 2017+int(i/12), i%12+1))
+
                             elif(Worksheet.attrib['{urn:schemas-microsoft-com:office:spreadsheet}Name']=='Trend'):   
                                 self.cbindicator = self.get_cbindicator(values[1], values[2], values[3], values[4])                                
                                 if len(values) == 24 :
