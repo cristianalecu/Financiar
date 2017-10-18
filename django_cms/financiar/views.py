@@ -42,9 +42,24 @@ def locations_list(request):
         'page_title': "Tobacco Locations " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
         'tab_head': thead,
         'tab_body': table,
+        'link_new': 'financiar:location_new',
+        'link_edit': 'financiar:location_edit',
+        'link_delete': 'financiar:location_delete',
     }
     return render(request, 'table_datasort.html', context)
 
+def location_new(request):
+    if not request.user.is_staff():
+        return redirect('users:login')
+    
+def location_edit(request):
+    if not request.user.is_staff():
+        return redirect('users:login')
+    
+def location_delete(request):
+    if not request.user.is_staff():
+        return redirect('users:login')
+    
 def salesdata_list(request):
     if request.user.id is  None:
         return redirect('/accounts/login/')

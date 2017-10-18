@@ -2,14 +2,6 @@
 {% load cms_tags staticfiles %}
 
 {% block title %}{{ page_title }}{% endblock title %}
-
-    {% block head_additional_css %}
-    <!-- DataTables CSS -->
-    <link href="{% static "vendor/datatables-plugins/dataTables.bootstrap.css" %}" rel="stylesheet">
-
-    <!-- DataTables Responsive CSS -->
-    <link href="{% static "vendor/datatables-responsive/dataTables.responsive.css" %}" rel="stylesheet">
-    {% endblock %}
     
 {% block content_SBA %}
         <div id="page-wrapper">
@@ -56,19 +48,3 @@
     </div>
 {% endblock content_SBA %}
 
-{% block bottom_additional_js %}
-    <!-- DataTables JavaScript -->
-    <script src="{% static "vendor/datatables/js/jquery.dataTables.min.js" %}"></script>
-    <script src="{% static "vendor/datatables-plugins/dataTables.bootstrap.min.js" %}"></script>
-    <script src="{% static "vendor/datatables-responsive/dataTables.responsive.js" %}"></script>
-
-    <!-- Page-Level Demo Scripts - Tables - Use for reference -->
-    <script>
-    function startup_function() 
-    {
-        $('#dataTables').DataTable({
-            //responsive: true
-        });
-    }
-    </script>
-{% endblock %}
