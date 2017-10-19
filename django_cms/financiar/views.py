@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from financiar.models import SalesData, Location, ChannelBrandIndicator,\
-    CBIndicatorData, LocationFull, Lookup, CBIndicatorFull, GraficData
+from financiar.models import SalesData, ChannelBrandIndicator,\
+    CBIndicatorData, Lookup, GraficData,\
+    LocationFinal, LocationFull, Channel, Brand, Location
 from financiar.process_import_xml import SalesXmlProcessor
 import time
 import locale
-from financiar.forms import CBIndicatorForm
+from financiar.forms import CBIndicatorForm, LocationForm
 
 
 def locations_list(request):
@@ -52,16 +53,80 @@ def locations_list(request):
 def location_new(request):
     if not request.user.is_staff:
         return redirect('users:login')
-    return redirect('financiar:locations_list')
     
+    if request.method == "POST":
+        form = LocationForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.user = request.user
+            obj.update = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+            obj = form.save(commit=True)
+            return redirect('financiar:locations_list')
+    else:
+        form = LocationForm()
+
+    context = {
+        'page_title': 'New Localtion',
+        'params': { 'name': {'class' : 'form-control'}, 
+                    'title': {'class' : 'form-control'}, 
+                    'channel': {'class' : 'form-control'}, 
+                    'brand': {'class' : 'form-control'}, 
+                    'category': {'class' : 'form-control'}, 
+                    'subcategory': {'class' : 'form-control'}, 
+                    'ebenchmark': {'class' : 'form-control'}, 
+                    'bbenchmark': {'class' : 'form-control'}, 
+                    'sales_concept': {'class' : 'form-control'}, 
+                    'sales_concept_size': {'class' : 'form-control'}, 
+                    'cn_vs_H': {'class' : 'form-control'}, 
+                    'cn_vs_B': {'class' : 'form-control'}, 
+                    'opened_from': {'class' : 'form-control datepicker'}, 
+                    'opened_to': {'class' : 'form-control datepicker'}, 
+                    },
+        'form': form,
+    }
+    return render(request, 'modelform_edit.html', context)    
 def location_edit(request, pk):
     if not request.user.is_staff:
         return redirect('users:login')
-    return redirect('financiar:locations_list')
     
+    obj = get_object_or_404(Location, pk=pk)
+    if request.method == "POST":
+        form = LocationForm(request.POST, instance=obj)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.user = request.user
+            obj.update = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+            obj = form.save(commit=True)
+            return redirect('financiar:locations_list')
+    else:
+        form = LocationForm(instance=obj)
+    context = {
+        'page_title': 'Indicator '+obj.name,
+        'params': { 'name': {'class' : 'form-control'}, 
+                    'title': {'class' : 'form-control'}, 
+                    'channel': {'class' : 'form-control'}, 
+                    'brand': {'class' : 'form-control'}, 
+                    'category': {'class' : 'form-control'}, 
+                    'subcategory': {'class' : 'form-control'}, 
+                    'ebenchmark': {'class' : 'form-control'}, 
+                    'bbenchmark': {'class' : 'form-control'}, 
+                    'sales_concept': {'class' : 'form-control'}, 
+                    'sales_concept_size': {'class' : 'form-control'}, 
+                    'cn_vs_H': {'class' : 'form-control'}, 
+                    'cn_vs_B': {'class' : 'form-control'}, 
+                    'opened_from': {'class' : 'form-control datepicker'}, 
+                    'opened_to': {'class' : 'form-control datepicker'}, 
+                    },
+        'form': form,
+    }
+    return render(request, 'modelform_edit.html', context)    
+
 def location_delete(request, pk):
     if not request.user.is_staff:
         return redirect('users:login')
+    
+    obj = get_object_or_404(Location, pk=pk)
+    obj.delete()
     return redirect('financiar:locations_list')
     
 def salesdata_list(request):
@@ -232,8 +297,27 @@ def indicator_new(request):
     else:
         form = CBIndicatorForm()
 
+    form.fields['channels'].queryset = Channel.objects.all().order_by("name")
+    form.fields['brands'].queryset = Brand.objects.all().order_by("name")
+    
     context = {
         'page_title': 'New Indicator',
+        'params': { 'name': {'class' : 'form-control'}, 
+                    'bchannel': {'class' : 'form-control'}, 
+                    'channels': {'class' : 'normal-control'}, 
+                    'bbrand': {'class' : 'form-control'}, 
+                    'brands': {'class' : 'normal-control'}, 
+                    'bcategory': {'class' : 'form-control'}, 
+                    'categories': {'class' : 'normal-control'}, 
+                    'bsubcategory': {'class' : 'form-control'}, 
+                    'subcategories': {'class' : 'normal-control'}, 
+                    'bbenchmark': {'class' : 'form-control'}, 
+                    'ebenchmarks': {'class' : 'normal-control'}, 
+                    'bsalesconcept': {'class' : 'form-control'}, 
+                    'salesconcepts': {'class' : 'normal-control'}, 
+                    'bsalesconceptsize': {'class' : 'form-control'}, 
+                    'salesconceptsizes': {'class' : 'normal-control'}, 
+                    },
         'form': form,
     }
     return render(request, 'modelform_edit.html', context)
@@ -254,8 +338,27 @@ def indicator_edit(request, pk):
     else:
         form = CBIndicatorForm(instance=obj)
 
+    form.fields['channels'].queryset = Channel.objects.all().order_by("name")
+    form.fields['brands'].queryset = Brand.objects.all().order_by("name")
+    
     context = {
         'page_title': 'Indicator '+obj.name,
+        'params': { 'name': {'class' : 'form-control'}, 
+                    'bchannel': {'class' : 'form-control'}, 
+                    'channels': {'class' : 'normal-control'}, 
+                    'bbrand': {'class' : 'form-control'}, 
+                    'brands': {'class' : 'normal-control'}, 
+                    'bcategory': {'class' : 'form-control'}, 
+                    'categories': {'class' : 'normal-control'}, 
+                    'bsubcategory': {'class' : 'form-control'}, 
+                    'subcategories': {'class' : 'normal-control'}, 
+                    'bbenchmark': {'class' : 'form-control'}, 
+                    'ebenchmarks': {'class' : 'normal-control'}, 
+                    'bsalesconcept': {'class' : 'form-control'}, 
+                    'salesconcepts': {'class' : 'normal-control'}, 
+                    'bsalesconceptsize': {'class' : 'form-control'}, 
+                    'salesconceptsizes': {'class' : 'normal-control'}, 
+                    },
         'form': form,
     }
     return render(request, 'modelform_edit.html', context)
@@ -419,6 +522,7 @@ def finalsales_list(request):
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
+    sales = LocationFinal.objects.all() 
     sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
             " s.value * (1+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur + (coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur) * s.traffic) value,  "
             " s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "

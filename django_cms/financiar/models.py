@@ -90,6 +90,26 @@ class Location(models.Model):
 class Lookup(models.Model):
     name = models.CharField(max_length=100)
 
+class LocationFull(models.Model):
+    name = models.CharField(max_length=5)
+    number = models.PositiveSmallIntegerField(default=1)
+    title = models.CharField(max_length=100, default=' ')
+    channel =models.CharField(max_length=100, default=' ')
+    brand = models.CharField(max_length=100, default=' ')
+    category = models.CharField(max_length=100, default=' ')
+    subcategory =models.CharField(max_length=100, default=' ')
+    ebenchmark = models.CharField(max_length=100, default=' ')
+    bbenchmark = models.CharField(max_length=100, default=' ')
+    sales_concept = models.CharField(max_length=100, default=' ')
+    sales_concept_size = models.CharField(max_length=100, default=' ')
+    cn_vs_H = models.CharField(max_length=100, default=' ')
+    cn_vs_B = models.CharField(max_length=100, default=' ')
+    opened_from = models.DateField(default='2016-01-01')
+    opened_to = models.DateField(default='2019-12-01')
+    
+    def __str__(self):
+            return self.name.zfill(3) + " - " + self.title
+        
 class LocationFinal(models.Model):
     number = models.PositiveIntegerField(default=1)
     title = models.CharField(max_length=100, default=' ')
@@ -129,16 +149,6 @@ class SalesData(models.Model):
 #             indexes = [
 #                 models.Index(fields=['first_name'], name='first_name_idx'),
 #             ]        
-
-class CBIndicatorFull(models.Model):
-    name = models.CharField(max_length=100)
-    channel = models.CharField(max_length=100, default=' ')
-    brand = models.CharField(max_length=100, default=' ')
-    category = models.CharField(max_length=100, default=' ')
-    subcategory = models.CharField(max_length=100, default=' ')
-
-    def __str__(self):
-            return self.name
 
 class ChannelBrandIndicator(models.Model):
     name = models.CharField(max_length=100)

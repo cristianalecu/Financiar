@@ -1,6 +1,7 @@
 from django.forms import ModelForm
 from financiar.models import Location, ChannelBrandIndicator
 from django.forms.widgets import CheckboxSelectMultiple
+from django.contrib.admin.widgets import AdminDateWidget
 
 class LocationForm(ModelForm):
     class Meta:
@@ -38,6 +39,8 @@ class LocationForm(ModelForm):
 #         help_texts = {
 #         }
         widgets = {
+            'opened_from': AdminDateWidget(),
+            'opened_to': AdminDateWidget()
             #'notes': Textarea(attrs={'cols': '20', 'rows': '5'}),
         }
 
@@ -74,18 +77,6 @@ class CBIndicatorForm(ModelForm):
             'bsalesconceptsize': 'Only for following Sales Concept sizes', 
             'salesconceptsizes': 'Sales Concept sizes'
         }
-#         empty_labels = {
-#             'channel': 'select a Channel', 
-#             'brand': 'select a Brand', 
-#             'category': 'select a Category', 
-#             'subcategory': 'select a Subcategory', 
-#             'ebenchmark': 'select a Benchmark', 
-#             'bbenchmark': 'select a Benchmark', 
-#             'sales_concept': 'select Sales Concept', 
-#             'sales_concept_size': 'select Sales Concept Size', 
-#             'cn_vs_H': 'select Constant Network', 
-#             'cn_vs_B': 'select Constant Network',
-#         }
         help_texts = {
             'channels': ' ',
             'brands': ' ',

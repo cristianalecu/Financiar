@@ -20,11 +20,13 @@
                            <div id="quick_submit" class="form">
 										{% for field in form %}
 										    {{ field.label }} 
+											{% for key, value in params.items  %}
+											  {% if key = field.name %}
+											    {{ field | add_class:value.class }} 
+											  {% endif %}
+											{% endfor %}
 											{% if field.help_text %}
-											    {{ field }} 
-												<small style="color: grey">{{ field.help_text|safe }}</small><br>
-											{% else %}
-										        {{ field | add_class:'form-control' }} 
+												<small style="color: grey">{{ field.help_text|safe }}</small>
 											{% endif %}
 											{{ field.errors }}
 										{% endfor %}
