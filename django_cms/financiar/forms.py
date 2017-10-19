@@ -1,5 +1,6 @@
 from django.forms import ModelForm
 from financiar.models import Location, ChannelBrandIndicator
+from django.forms.widgets import CheckboxSelectMultiple
 
 class LocationForm(ModelForm):
     class Meta:
@@ -45,12 +46,19 @@ class CBIndicatorForm(ModelForm):
 
     class Meta:
         model = ChannelBrandIndicator
-        fields = ['name', 'bbenchmark', 'ebenchmarks', 'bchannel', 'channels', 'bbrand', 'brands', 'bcategory', 'categories', 
-                  'bsubcategory', 'subcategories', 'bsalesconcept', 'salesconcepts', 'bsalesconceptsize', 'salesconceptsizes']
+        fields = ['name', 'bchannel', 'channels', 'bbrand', 'brands', 'bcategory', 'categories', 'bsubcategory', 'subcategories', 
+                  'bbenchmark', 'ebenchmarks', 'bsalesconcept', 'salesconcepts', 'bsalesconceptsize', 'salesconceptsizes']
+        defults = {
+            'bchannel': 0,
+            'bbrand': 0,
+            'bcategory': 0,
+            'bsubcategory': 0,
+            'bbenchmark': 0,
+            'bsalesconcept': 0,
+            'bsalesconceptsize': 0,
+        }
         labels = {
             'name': 'Comment Name', 
-            'bbenchmark': 'Only for following E Benchmarks', 
-            'ebenchmarks': 'E Benchmarks', 
             'bchannel': 'Only for following channels', 
             'channels': 'Channels', 
             'bbrand': 'Only for following Brands', 
@@ -59,6 +67,8 @@ class CBIndicatorForm(ModelForm):
             'categories': 'Categories', 
             'bsubcategory': 'Only for following Subcategries', 
             'subcategories': 'Subcategries', 
+            'bbenchmark': 'Only for following E Benchmarks', 
+            'ebenchmarks': 'E Benchmarks', 
             'bsalesconcept': 'Only for following Sales Concepts', 
             'salesconcepts': "Sales Concepts", 
             'bsalesconceptsize': 'Only for following Sales Concept sizes', 
@@ -76,8 +86,21 @@ class CBIndicatorForm(ModelForm):
 #             'cn_vs_H': 'select Constant Network', 
 #             'cn_vs_B': 'select Constant Network',
 #         }
-#         help_texts = {
-#         }
+        help_texts = {
+            'channels': ' ',
+            'brands': ' ',
+            'categories': ' ',
+            'subcategories': ' ',
+            'ebenchmarks': ' ',
+            'salesconcepts': ' ',
+            'salesconceptsizes': ' ',
+        }
         widgets = {
-            #'notes': Textarea(attrs={'cols': '20', 'rows': '5'}),
+            'channels': CheckboxSelectMultiple(),
+            'brands': CheckboxSelectMultiple(),
+            'categories': CheckboxSelectMultiple(),
+            'subcategories': CheckboxSelectMultiple(),
+            'ebenchmarks': CheckboxSelectMultiple(),
+            'salesconcepts': CheckboxSelectMultiple(),
+            'salesconceptsizes': CheckboxSelectMultiple(),
         }

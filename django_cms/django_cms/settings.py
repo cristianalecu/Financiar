@@ -1,6 +1,3 @@
-import os
-gettext = lambda s: s
-DATA_DIR = os.path.dirname(os.path.dirname(__file__))
 """
 Django settings for django_cms project.
 
@@ -13,16 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'd3=9i-msen!+6yrh^qx4ces#(a+d&i3j-o0#f-v3e5fp9-ob8q'
-
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-#from djangocms_text_ckeditor.settings import CKEDITOR_SETTINGS
+gettext = lambda s: s
+
+DATA_DIR = os.path.dirname(os.path.dirname(__file__))
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'd3=9i-msen!+6yrh^qx4ces#(a+d&i3j-o0#f-v3e5fp9-ob8q'
+
+#from djangocms_text_ckeditor.settings import CKEDITOR_SETTINGS
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -66,6 +65,7 @@ INSTALLED_APPS = (
     'mptt', 
     'aldryn_bootstrap3',
 	'django_cms',
+    'widget_tweaks',
 	
 	'allauth',
     'allauth.account',

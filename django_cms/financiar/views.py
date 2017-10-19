@@ -1,11 +1,10 @@
-from django.shortcuts import render
-from financiar.forms import SalesDataForm
 from django.shortcuts import render, redirect, get_object_or_404
 from financiar.models import SalesData, Location, ChannelBrandIndicator,\
     CBIndicatorData, LocationFull, Lookup, CBIndicatorFull, GraficData
 from financiar.process_import_xml import SalesXmlProcessor
 import time
 import locale
+from financiar.forms import CBIndicatorForm
 
 
 def locations_list(request):
@@ -169,14 +168,6 @@ def indicators_list(request):
     locale.setlocale(locale.LC_NUMERIC, 'English')
     thead=['Indicator', 'Channel','Brand','Category','Subcategory', 'Ebenchmarks', 'Sales Concept', 'Sales Concept Size']
     table = {}
-#     for indicator in CBIndicatorFull.objects.raw("select i.id, i.name, ch.name channel, b.name brand, c.name category, s.name subcategory  from financiar_channelbrandindicator i "
-#             "left join financiar_brand b on b.id = i.brand_id "
-#             "left join financiar_channel ch on ch.id = i.channel_id "
-#             "left join financiar_category c on c.id = i.category_id "
-#             "left join financiar_subcategory s on s.id = i.subcategory_id "
-#             "order by i.id"
-#             ):
-#         table[indicator.id] = [str(indicator.id), indicator.channel, indicator.brand, indicator.category, indicator.subcategory]
     for indicator in ChannelBrandIndicator.objects.all().order_by('id'):
         channels = ""
         brands = ""
@@ -220,8 +211,62 @@ def indicators_list(request):
         'page_title': "Channel Brand indicators " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)),
         'tab_head': thead,
         'tab_body': table,
+        'link_new': 'financiar:indicator_new',
+        'link_edit': 'financiar:indicator_edit',
+        'link_delete': 'financiar:indicator_delete',
     }
     return render(request, 'table_datasort.html', context)
+
+def indicator_new(request):
+    if not request.user.is_staff:
+        return redirect('users:login')
+    
+    if request.method == "POST":
+        form = CBIndicatorForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.user = request.user
+            obj.update = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+            obj = form.save(commit=True)
+            return redirect('financiar:indicators_list')
+    else:
+        form = CBIndicatorForm()
+
+    context = {
+        'page_title': 'New Indicator',
+        'form': form,
+    }
+    return render(request, 'modelform_edit.html', context)
+    
+def indicator_edit(request, pk):
+    if not request.user.is_staff:
+        return redirect('users:login')
+    
+    obj = get_object_or_404(ChannelBrandIndicator, pk=pk)
+    if request.method == "POST":
+        form = CBIndicatorForm(request.POST, instance=obj)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.user = request.user
+            obj.update = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
+            obj = form.save(commit=True)
+            return redirect('financiar:indicators_list')
+    else:
+        form = CBIndicatorForm(instance=obj)
+
+    context = {
+        'page_title': 'Indicator '+obj.name,
+        'form': form,
+    }
+    return render(request, 'modelform_edit.html', context)
+    
+def indicator_delete(request, pk):
+    if not request.user.is_staff:
+        return redirect('users:login')
+    
+    obj = get_object_or_404(ChannelBrandIndicator, pk=pk)
+    obj.delete()
+    return redirect('financiar:indicators_list')
 
 def trends_list(request):
     if request.user.id is  None:
@@ -375,15 +420,19 @@ def finalsales_list(request):
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
     sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
-            "CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN "
-            "  s.value * (1-s.matur+ coalesce(cb.trend+cb.inflation+cb.commercial_actions,0) + (-s.matur+coalesce(cb.trend+cb.inflation+cb.commercial_actions,0) * s.traffic))  else s.value * (1 - s.matur + (-s.matur) * s.traffic)   end value, "
-            "  s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
-            "left join financiar_location l on l.id = s.location_id "
-            "left outer join financiar_channelbrandindicator ind "
-            "      on ind.channel_id = l.channel_id and ind.brand_id = l.brand_id and ind.category_id=l.category_id and ind.subcategory_id=l.subcategory_id "
+            " s.value * (1+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur + (coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur) * s.traffic) value,  "
+            " s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
+            " left join financiar_location l on l.id = s.location_id "
+            " left outer join financiar_channelbrandindicator ind "
+            "  on   (ind.bchannel=0 or exists (select id from financiar_channelbrandindicator_channels cbch where ind.id=cbch.channelbrandindicator_id and cbch.channel_id=l.channel_id) ) "
+            "   and (ind.bbrand=0 or exists (select id from financiar_channelbrandindicator_brands cbbr where ind.id=cbbr.channelbrandindicator_id and cbbr.brand_id=l.brand_id) ) "
+            "   and (ind.bcategory=0 or exists (select id from financiar_channelbrandindicator_categories cbc where ind.id=cbc.channelbrandindicator_id and cbc.category_id=l.category_id) ) "
+            "   and (ind.bsubcategory=0 or exists (select id from financiar_channelbrandindicator_subcategories cbsu where ind.id=cbsu.channelbrandindicator_id and cbsu.subcategory_id=l.subcategory_id) ) "
+            "   and (ind.bbenchmark=0 or exists (select id from financiar_channelbrandindicator_ebenchmarks cbbe where ind.id=cbbe.channelbrandindicator_id and cbbe.benchmark_id=l.ebenchmark_id) ) "
+            "   and (ind.bsalesconcept=0 or exists (select id from financiar_channelbrandindicator_salesconcepts cbs where ind.id=cbs.channelbrandindicator_id and cbs.salesconcept_id=l.sales_concept_id) ) "
+            "   and (ind.bsalesconceptsize=0 or exists (select id from financiar_channelbrandindicator_salesconceptsizes cbss where ind.id=cbss.channelbrandindicator_id and cbss.salesconceptsize_id=l.sales_concept_size_id) ) "
             "left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month "
             "order by s.location_id, s.year, s.month")
-        
     location = -1
     firstline = 0
     for sale in sales:

@@ -69,16 +69,16 @@ class Location(models.Model):
     name = models.CharField(max_length=5)
     number = models.PositiveSmallIntegerField(default=1)
     title = models.CharField(max_length=100, default=' ')
-    channel = models.ForeignKey(Channel, related_name='locations')
-    brand = models.ForeignKey(Brand, related_name='locations')
-    category = models.ForeignKey(Category, related_name='locations')
-    subcategory = models.ForeignKey(Subcategory, related_name='locations')
-    ebenchmark = models.ForeignKey(Benchmark, related_name='locations_E')
-    bbenchmark = models.ForeignKey(Benchmark, related_name='locations_B')
-    sales_concept = models.ForeignKey(SalesConcept, related_name='locations')
-    sales_concept_size = models.ForeignKey(SalesConceptSize, related_name='locations')
-    cn_vs_H = models.ForeignKey(ConstNetwork, related_name='locations_vsH')
-    cn_vs_B = models.ForeignKey(ConstNetwork, related_name='locations_vsB')
+    channel = models.ForeignKey(Channel, null=True, on_delete=models.SET_NULL, related_name='locations')
+    brand = models.ForeignKey(Brand, null=True, on_delete=models.SET_NULL, related_name='locations')
+    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL, related_name='locations')
+    subcategory = models.ForeignKey(Subcategory, null=True, on_delete=models.SET_NULL, related_name='locations')
+    ebenchmark = models.ForeignKey(Benchmark, null=True, on_delete=models.SET_NULL, related_name='locations_E')
+    bbenchmark = models.ForeignKey(Benchmark, null=True, on_delete=models.SET_NULL, related_name='locations_B')
+    sales_concept = models.ForeignKey(SalesConcept, null=True, on_delete=models.SET_NULL, related_name='locations')
+    sales_concept_size = models.ForeignKey(SalesConceptSize, null=True, on_delete=models.SET_NULL, related_name='locations')
+    cn_vs_H = models.ForeignKey(ConstNetwork, null=True, on_delete=models.SET_NULL, related_name='locations_vsH')
+    cn_vs_B = models.ForeignKey(ConstNetwork, null=True, on_delete=models.SET_NULL, related_name='locations_vsB')
     opened_from = models.DateField(default='2016-01-01')
     opened_to = models.DateField(default='2019-12-01')
     updated = models.DateTimeField(auto_now_add=True)
@@ -90,25 +90,17 @@ class Location(models.Model):
 class Lookup(models.Model):
     name = models.CharField(max_length=100)
 
-class LocationFull(models.Model):
-    name = models.CharField(max_length=5)
-    number = models.PositiveSmallIntegerField(default=1)
+class LocationFinal(models.Model):
+    number = models.PositiveIntegerField(default=1)
     title = models.CharField(max_length=100, default=' ')
-    channel =models.CharField(max_length=100, default=' ')
-    brand = models.CharField(max_length=100, default=' ')
-    category = models.CharField(max_length=100, default=' ')
-    subcategory =models.CharField(max_length=100, default=' ')
-    ebenchmark = models.CharField(max_length=100, default=' ')
-    bbenchmark = models.CharField(max_length=100, default=' ')
-    sales_concept = models.CharField(max_length=100, default=' ')
-    sales_concept_size = models.CharField(max_length=100, default=' ')
-    cn_vs_H = models.CharField(max_length=100, default=' ')
-    cn_vs_B = models.CharField(max_length=100, default=' ')
-    opened_from = models.DateField(default='2016-01-01')
-    opened_to = models.DateField(default='2019-12-01')
-    
-    def __str__(self):
-            return self.name.zfill(3) + " - " + self.title
+    year = models.PositiveSmallIntegerField(default=2017)
+    month = models.PositiveSmallIntegerField(default=1)
+    base = models.FloatField(default = 0)
+    trend = models.FloatField(default = 0)
+    infla = models.FloatField(default = 0)
+    actions = models.FloatField(default = 0)
+    matur = models.FloatField(default = 0)
+    traffic = models.FloatField(default = 0)
         
 class SalesData(models.Model):
     DATA_TYPE = (
@@ -121,7 +113,7 @@ class SalesData(models.Model):
     (40,'Other'),
     )
 
-    location = models.ForeignKey(Location, related_name='sales_data')
+    location = models.ForeignKey(Location, related_name='sales_data', on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(default=2017)
     month = models.PositiveSmallIntegerField(default=1)
     open = models.BooleanField(default = True)
@@ -150,11 +142,11 @@ class CBIndicatorFull(models.Model):
 
 class ChannelBrandIndicator(models.Model):
     name = models.CharField(max_length=100)
-    bbenchmark = models.BooleanField(default = 1)
+    bbenchmark = models.BooleanField(default = 0)
     ebenchmarks = models.ManyToManyField(Benchmark, blank=True)
-    bchannel = models.BooleanField(default = 1)
+    bchannel = models.BooleanField(default = 0)
     channels = models.ManyToManyField(Channel, blank=True)
-    bbrand =  models.BooleanField(default = 1)
+    bbrand =  models.BooleanField(default = 0)
     brands = models.ManyToManyField(Brand, blank=True)
     bcategory =  models.BooleanField(default = 0)
     categories = models.ManyToManyField(Category, blank=True)
@@ -164,10 +156,6 @@ class ChannelBrandIndicator(models.Model):
     salesconcepts = models.ManyToManyField(SalesConcept, blank=True)
     bsalesconceptsize =  models.BooleanField(default = 0)
     salesconceptsizes = models.ManyToManyField(SalesConceptSize, blank=True)
-    
-# class BookForm(forms.ModelForm):
-#     themes = forms.ModelMultipleChoiceField(queryset=Thema.objects, widget=forms.CheckboxSelectMultiple(), required=False)
-            
     updated = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, related_name='cbindicators')
     
@@ -175,7 +163,7 @@ class ChannelBrandIndicator(models.Model):
             return self.name
     
 class CBIndicatorData(models.Model):
-    indicator = models.ForeignKey(ChannelBrandIndicator, related_name='indicator_data')
+    indicator = models.ForeignKey(ChannelBrandIndicator, related_name='indicator_data', on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(default=2017)
     month = models.PositiveSmallIntegerField(default=1)
     trend = models.FloatField(default = 0)

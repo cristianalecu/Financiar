@@ -32,6 +32,9 @@
                                  {% for xth in tab_head %} 
                                      <th> {{ xth }} </th>
                                  {% endfor %}
+                                 {% if link_edit %}
+                                     <th> {{ xth }} </th>
+                                 {% endif %}
                               </tr></thead>
                               <tbody> 
                                 {% for row, values in tab_body.items %}
@@ -39,8 +42,12 @@
 	                                 {% for xtd in values %} 
 	                                     <td>  {{ xtd }} </td>
 	                                 {% endfor %}
-	                                 {% if link_new %}
-	                                 {% endif %}
+	                                {% if link_edit %}
+	                                 <td>
+	                                     <a title="Edit" href="{% url link_edit row %}" class="btn btn-floating-action btn-primary"><span class="glyphicon glyphicon-pencil"></span></a>
+										 <a title="Delete" href="{% url link_delete row %}" class="btn btn-floating-action btn-danger" onclick="return confirm('Are you sure you want to delete line?')"><span class="glyphicon glyphicon-remove"></span> </a>
+	                                 </td>
+		                            {% endif %}
                                  </tr>
                                 {% endfor %}
                               </tbody>
