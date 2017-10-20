@@ -17,7 +17,8 @@
                             {{ page_title }}
                         </div>
                         <div class="panel-body">
-                           <div id="quick_submit" class="form">
+                           <form id="quick_submit" class="form" method="post">
+                               {% csrf_token %}
 										{% for field in form %}
 										    {{ field.label }} 
 											{% for key, value in params.items  %}
@@ -34,7 +35,7 @@
 										<p class="stick-bottom-right"><input type="submit" value="Save" class="btn btn-primary"/></p>
 										{% endif %}
 										{{ form.non_field_errors }}		
-						   </div>
+						   </form>
                         </div>
                     </div>
                     <!-- /.panel -->

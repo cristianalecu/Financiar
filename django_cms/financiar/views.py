@@ -59,6 +59,7 @@ def location_new(request):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.user = request.user
+            obj.number = obj.id
             obj.update = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
             obj = form.save(commit=True)
             return redirect('financiar:locations_list')
@@ -85,6 +86,7 @@ def location_new(request):
         'form': form,
     }
     return render(request, 'modelform_edit.html', context)    
+
 def location_edit(request, pk):
     if not request.user.is_staff:
         return redirect('users:login')
@@ -95,6 +97,7 @@ def location_edit(request, pk):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.user = request.user
+            obj.number = obj.id
             obj.update = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())
             obj = form.save(commit=True)
             return redirect('financiar:locations_list')
@@ -241,20 +244,27 @@ def indicators_list(request):
         ebench = ""
         sconcepts = ""
         sconceptsz = ""
-        for obj in indicator.channels.all():
-            channels += (", " + obj.name)
-        for obj in indicator.brands.all():
-            brands += (", " + obj.name)
-        for obj in indicator.categories.all():
-            categs += (", " + obj.name)
-        for obj in indicator.subcategories.all():
-            subcategs += (", " + obj.name)
-        for obj in indicator.ebenchmarks.all():
-            ebench += (", " + obj.name)
-        for obj in indicator.salesconcepts.all():
-            sconcepts += (", " + obj.name)
-        for obj in indicator.salesconceptsizes.all():
-            sconceptsz += (", " + obj.name)
+        if indicator.bchannel > 0:
+            for obj in indicator.channels.all():
+                channels += (", " + obj.name)
+        if indicator.bbrand > 0:
+            for obj in indicator.brands.all():
+                brands += (", " + obj.name)
+        if indicator.bcategory > 0:
+            for obj in indicator.categories.all():
+                categs += (", " + obj.name)
+        if indicator.bsubcategory > 0:
+            for obj in indicator.subcategories.all():
+                subcategs += (", " + obj.name)
+        if indicator.bbenchmark > 0:
+            for obj in indicator.ebenchmarks.all():
+                ebench += (", " + obj.name)
+        if indicator.bsalesconcept > 0:
+            for obj in indicator.salesconcepts.all():
+                sconcepts += (", " + obj.name)
+        if indicator.bsalesconceptsize > 0:
+            for obj in indicator.salesconceptsizes.all():
+                sconceptsz += (", " + obj.name)
         if len(channels) > 0 :
             channels = channels[2:]
         if len(brands) > 0 :
@@ -446,12 +456,17 @@ def trend_impact_list(request):
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
     sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
-            "CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN "
-            "  s.value * COALESCE(cb.trend, 0) else 0 end value, "
-            "  s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
-            "left join financiar_location l on l.id = s.location_id "
-            "left outer join financiar_channelbrandindicator ind "
-            "      on ind.channel_id = l.channel_id and ind.brand_id = l.brand_id and ind.category_id=l.category_id and ind.subcategory_id=l.subcategory_id "
+            " s.value * coalesce(cb.trend,0) value,  "
+            " s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
+            " left join financiar_location l on l.id = s.location_id "
+            " left outer join financiar_channelbrandindicator ind "
+            "  on   (ind.bchannel=0 or exists (select id from financiar_channelbrandindicator_channels cbch where ind.id=cbch.channelbrandindicator_id and cbch.channel_id=l.channel_id) ) "
+            "   and (ind.bbrand=0 or exists (select id from financiar_channelbrandindicator_brands cbbr where ind.id=cbbr.channelbrandindicator_id and cbbr.brand_id=l.brand_id) ) "
+            "   and (ind.bcategory=0 or exists (select id from financiar_channelbrandindicator_categories cbc where ind.id=cbc.channelbrandindicator_id and cbc.category_id=l.category_id) ) "
+            "   and (ind.bsubcategory=0 or exists (select id from financiar_channelbrandindicator_subcategories cbsu where ind.id=cbsu.channelbrandindicator_id and cbsu.subcategory_id=l.subcategory_id) ) "
+            "   and (ind.bbenchmark=0 or exists (select id from financiar_channelbrandindicator_ebenchmarks cbbe where ind.id=cbbe.channelbrandindicator_id and cbbe.benchmark_id=l.ebenchmark_id) ) "
+            "   and (ind.bsalesconcept=0 or exists (select id from financiar_channelbrandindicator_salesconcepts cbs where ind.id=cbs.channelbrandindicator_id and cbs.salesconcept_id=l.sales_concept_id) ) "
+            "   and (ind.bsalesconceptsize=0 or exists (select id from financiar_channelbrandindicator_salesconceptsizes cbss where ind.id=cbss.channelbrandindicator_id and cbss.salesconceptsize_id=l.sales_concept_size_id) ) "
             "left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month "
             "order by s.location_id, s.year, s.month")
         
@@ -486,10 +501,18 @@ def traffic_impact_list(request):
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
     sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
-            "CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN "
-            "  s.value * s.traffic else 0 end value, "
-            "  s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
-            "left join financiar_location l on l.id = s.location_id "
+            " s.value * s.traffic value,  "
+            " s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
+            " left join financiar_location l on l.id = s.location_id "
+            " left outer join financiar_channelbrandindicator ind "
+            "  on   (ind.bchannel=0 or exists (select id from financiar_channelbrandindicator_channels cbch where ind.id=cbch.channelbrandindicator_id and cbch.channel_id=l.channel_id) ) "
+            "   and (ind.bbrand=0 or exists (select id from financiar_channelbrandindicator_brands cbbr where ind.id=cbbr.channelbrandindicator_id and cbbr.brand_id=l.brand_id) ) "
+            "   and (ind.bcategory=0 or exists (select id from financiar_channelbrandindicator_categories cbc where ind.id=cbc.channelbrandindicator_id and cbc.category_id=l.category_id) ) "
+            "   and (ind.bsubcategory=0 or exists (select id from financiar_channelbrandindicator_subcategories cbsu where ind.id=cbsu.channelbrandindicator_id and cbsu.subcategory_id=l.subcategory_id) ) "
+            "   and (ind.bbenchmark=0 or exists (select id from financiar_channelbrandindicator_ebenchmarks cbbe where ind.id=cbbe.channelbrandindicator_id and cbbe.benchmark_id=l.ebenchmark_id) ) "
+            "   and (ind.bsalesconcept=0 or exists (select id from financiar_channelbrandindicator_salesconcepts cbs where ind.id=cbs.channelbrandindicator_id and cbs.salesconcept_id=l.sales_concept_id) ) "
+            "   and (ind.bsalesconceptsize=0 or exists (select id from financiar_channelbrandindicator_salesconceptsizes cbss where ind.id=cbss.channelbrandindicator_id and cbss.salesconceptsize_id=l.sales_concept_size_id) ) "
+            "left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month "
             "order by s.location_id, s.year, s.month")
         
     location = -1
@@ -522,7 +545,7 @@ def finalsales_list(request):
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
         table[location.id] = [str(location.id).zfill(3) + " - " + location.name]
-    sales = LocationFinal.objects.all() 
+ 
     sales = SalesData.objects.raw("select s.id, s.location_id, s.year, s.month, s.open, s.matur, "
             " s.value * (1+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur + (coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur) * s.traffic) value,  "
             " s.traffic, s.updated, s.user_id, s.type from financiar_salesdata s "
@@ -578,33 +601,39 @@ def graffic_list(request):
              'tot':['99 Total'],
              }
     sales = GraficData.objects.raw("select s.year * 12 + s.month id, s.year, s.month, sum(s.value) base, "
-"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.trend,0))  else 0  end) trend, "
-"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.inflation,0))  else 0  end) inflation, "
-"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (coalesce(cb.commercial_actions,0))  else 0  end) commercial_actions, "
-"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * (s.matur)  else 0  end) matur, "
-"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * ((1-s.matur+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)) * s.traffic)  else 0  end) traffic, "
-"sum(CASE WHEN l.ebenchmark_id in (select b.id from financiar_benchmark b where name='m-o-m' or name='m-o-pm')  THEN s.value * ((1-s.matur+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)) + (-s.matur+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)) * s.traffic)  else s.value  end) fullx  "
-"from financiar_salesdata s  "
-"left join financiar_location l on l.id = s.location_id "
-"left outer join financiar_channelbrandindicator ind  "
-"      on ind.channel_id = l.channel_id and ind.brand_id = l.brand_id and ind.category_id=l.category_id and ind.subcategory_id=l.subcategory_id  "
-"left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month  "
-"where l.cn_vs_B_id=2 "
-"group by s.year, s.month     order by s.year, s.month")
+            " sum(s.value * coalesce(cb.trend,0)) trend,  "
+            " sum(s.value * coalesce(cb.inflation,0)) inflation,  "
+            " sum(s.value * coalesce(cb.commercial_actions,0)) commercial_actions,  "
+            " sum(s.value * (-s.matur)) matur,  "
+            " sum(s.value * s.traffic) traffic,  "
+            " sum(s.value * (1+coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur + (coalesce(cb.trend,0)+coalesce(cb.inflation,0)+coalesce(cb.commercial_actions,0)-s.matur) * s.traffic)) fullx  "
+            " from financiar_salesdata s "
+            " left join financiar_location l on l.id = s.location_id "
+            " left outer join financiar_channelbrandindicator ind "
+            "  on   (ind.bchannel=0 or exists (select id from financiar_channelbrandindicator_channels cbch where ind.id=cbch.channelbrandindicator_id and cbch.channel_id=l.channel_id) ) "
+            "   and (ind.bbrand=0 or exists (select id from financiar_channelbrandindicator_brands cbbr where ind.id=cbbr.channelbrandindicator_id and cbbr.brand_id=l.brand_id) ) "
+            "   and (ind.bcategory=0 or exists (select id from financiar_channelbrandindicator_categories cbc where ind.id=cbc.channelbrandindicator_id and cbc.category_id=l.category_id) ) "
+            "   and (ind.bsubcategory=0 or exists (select id from financiar_channelbrandindicator_subcategories cbsu where ind.id=cbsu.channelbrandindicator_id and cbsu.subcategory_id=l.subcategory_id) ) "
+            "   and (ind.bbenchmark=0 or exists (select id from financiar_channelbrandindicator_ebenchmarks cbbe where ind.id=cbbe.channelbrandindicator_id and cbbe.benchmark_id=l.ebenchmark_id) ) "
+            "   and (ind.bsalesconcept=0 or exists (select id from financiar_channelbrandindicator_salesconcepts cbs where ind.id=cbs.channelbrandindicator_id and cbs.salesconcept_id=l.sales_concept_id) ) "
+            "   and (ind.bsalesconceptsize=0 or exists (select id from financiar_channelbrandindicator_salesconceptsizes cbss where ind.id=cbss.channelbrandindicator_id and cbss.salesconceptsize_id=l.sales_concept_size_id) ) "
+            "left outer join financiar_cbindicatordata cb on ind.id = cb.indicator_id and s.year=cb.year and s.month = cb.month "
+            "where l.cn_vs_B_id=2 "
+            "group by s.year, s.month     order by s.year, s.month")
         
     for sale in sales:
         thead.append(str(sale.month)+'.'+str(sale.year))
         table['base'].append(locale.format("%.0f",sale.base,True))
         table['trend'].append(locale.format("%.3f",sale.trend,True))
-        table['trendprc'].append("{0:.2f}%".format(sale.trend / sale.fullx * 100))
+        table['trendprc'].append("{0:.2f}%".format(0 if sale.fullx == 0 else (sale.trend / sale.fullx * 100)))
         table['infla'].append(locale.format("%.3f",sale.inflation,True))
-        table['inflaprc'].append("{0:.2f}%".format(sale.inflation / sale.fullx * 100))
+        table['inflaprc'].append("{0:.2f}%".format(0 if sale.fullx == 0 else (sale.inflation / sale.fullx * 100)))
         table['comm'].append(locale.format("%.3f",sale.commercial_actions,True))
-        table['commprc'].append("{0:.2f}%".format(sale.commercial_actions / sale.fullx * 100))
+        table['commprc'].append("{0:.2f}%".format(0 if sale.fullx == 0 else (sale.commercial_actions / sale.fullx * 100)))
         table['matur'].append(locale.format("%.3f",sale.matur,True))
-        table['maturprc'].append("{0:.2f}%".format(sale.matur / sale.fullx * 100))
+        table['maturprc'].append("{0:.2f}%".format(0 if sale.fullx == 0 else (sale.matur / sale.fullx * 100)))
         table['traffic'].append(locale.format("%.3f",sale.traffic,True))
-        table['trafficprc'].append("{0:.2f}%".format(sale.traffic / sale.fullx * 100))
+        table['trafficprc'].append("{0:.2f}%".format(0 if sale.fullx == 0 else (sale.traffic / sale.fullx * 100)))
         table['tot'].append(locale.format("%.0f",sale.fullx,True))
     elapsed_time=time.time()-start_time
     context = {
