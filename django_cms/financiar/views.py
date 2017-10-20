@@ -137,7 +137,7 @@ def salesdata_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -201,7 +201,7 @@ def traffic_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -233,7 +233,7 @@ def indicators_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Indicator', 'Channel','Brand','Category','Subcategory', 'Ebenchmarks', 'Sales Concept', 'Sales Concept Size']
     table = {}
     for indicator in ChannelBrandIndicator.objects.all().order_by('id'):
@@ -386,7 +386,7 @@ def trends_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
@@ -418,7 +418,7 @@ def inflation_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
@@ -450,7 +450,7 @@ def trend_impact_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -495,7 +495,7 @@ def traffic_impact_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -540,7 +540,7 @@ def finalsales_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Location_Name']
     table = {}
     for location in Lookup.objects.raw("select number id, title name from financiar_location order by number"):
@@ -585,7 +585,7 @@ def graffic_list(request):
         return redirect('/accounts/login/')
     
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
     thead=['Sum']
     table = {'base':['00 Base'],
              'trend':['01 Trend'],
@@ -648,7 +648,7 @@ def actions_list(request):
         return redirect('/accounts/login/')
        
     start_time=time.time()
-    locale.setlocale(locale.LC_NUMERIC, 'English')   
+    locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')   
     thead=['Indicator_Channel_Brand']
     table = {}
     for indicator in Lookup.objects.raw("select id, name from financiar_channelbrandindicator order by id"):
