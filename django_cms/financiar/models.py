@@ -87,6 +87,17 @@ class Location(models.Model):
     def __str__(self):
             return self.name.zfill(3) + " - " + self.title
 
+# class FilterLocation(models.Model):
+#     cn_vs_H = models.ForeignKey(ConstNetwork)
+#     cn_vs_B = models.ForeignKey(ConstNetwork)
+#     ebenchmark = models.ForeignKey(Benchmark)
+#     bbenchmark = models.ForeignKey(Benchmark)
+#     sales_concept = models.ForeignKey(SalesConcept)
+#     sales_concept_size = models.ForeignKey(SalesConceptSize)
+#     channel = models.ForeignKey(Channel)
+#     brand = models.ForeignKey(Brand)
+#     user = models.ForeignKey(User)
+
 class Lookup(models.Model):
     name = models.CharField(max_length=100)
 

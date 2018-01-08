@@ -302,7 +302,7 @@
                         </li>
                          <li>
                             <a href="#"><i class="fa fa-table fa-fw"></i> 09. Tobacco sales<span class="fa arrow"></a>
-                            <ul class="nav nav-second-level">
+                            <ul class="nav nav-second-level collapse in" aria-expanded='true'>
                                 <li>
                                     <a href="/fin/locations/">Locations</a>
                                 </li>
@@ -351,7 +351,7 @@
                             <a href="#"><i class="fa fa-edit fa-fw"></i> Forms</a>
                         </li>
                         <li>
-                            <a href="#"><i class="fa fa-wrench fa-fw"></i> UI Elements<span class="fa arrow"></span></a>
+                            <a href="#"><i class="fa fa-wrench fa-fw"></i> Maintenace<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="#">Panels and Wells</a>
@@ -415,9 +415,10 @@
     <!-- /#wrapper -->
 
 
-    <!-- jQuery -->
-    <script src="{% static "vendor/jquery/jquery.min.js" %}"></script>
-
+    <!-- jQuery <script src="{% static "vendor/jquery/jquery-ui/jquery-ui.js" %}"></script>   -->
+<script src="{% static "vendor/jquery/jquery.min.js" %}"></script>
+<script src="http://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>  
+  
     <!-- Bootstrap Core JavaScript -->
     <script src="{% static "vendor/bootstrap/js/bootstrap.min.js" %}"></script>
 
@@ -439,6 +440,9 @@ $(document).ready(function(){
 	
 	$(".navbar-nav li").addClass("nav-item");   // add necessary classes for menus if not added by djancgcms
 	$(".navbar-nav li a").addClass("nav-link");
+	$('#id_opened_from').datepicker({
+	    format: 'yyyy-mm-dd'
+	});
 
 	if(typeof startup_function === "function")  // if function defined, to not call $(document).ready multiple times
 		startup_function();
