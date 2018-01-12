@@ -1,6 +1,21 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class DataUpload(models.Model):
+    UPLOAD_TYPE = (
+    (0,'Tobacco'),
+    (100,'Other'),
+    )
+    
+    name = models.CharField(max_length=100)
+    updated = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, related_name='uploads')
+    type = models.PositiveIntegerField(choices = UPLOAD_TYPE, default=0)
+    uploaded_file = models.FileField(blank=True, upload_to='uploaded_file')
+    
+    def __str__(self):
+            return self.name
+
 class Channel(models.Model):
     name = models.CharField(max_length=100)
     updated = models.DateTimeField(auto_now_add=True)

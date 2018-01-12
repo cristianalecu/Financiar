@@ -17,7 +17,7 @@ git clone https://github.com/cristianalecu/Financiar.git
 
 cd Financiar
 
-start setup_financiar.bat
+start env.bat
 
 GOTO EOF
 
