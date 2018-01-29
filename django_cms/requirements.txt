@@ -23,3 +23,7 @@ django-widget-tweaks
 aldryn-style
 aldryn-bootstrap3
 django-allauth
+
+djangorestframework
+markdown
+django-filter

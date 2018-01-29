@@ -76,6 +76,7 @@ INSTALLED_APPS = (
 #     'allauth.socialaccount.providers.linkedin',
 #     'allauth.socialaccount.providers.linkedin_oauth2',
     'financiar',
+    'rest_framework',
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -84,6 +85,13 @@ ROOT_URLCONF = 'django_cms.urls'
 
 WSGI_APPLICATION = 'django_cms.wsgi.application'
 
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases

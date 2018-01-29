@@ -12,6 +12,5 @@ cd ..\Financiar
 
 :NO_CREATE
 
-
 call ..\venv\venv_fin\Scripts\activate.bat  
 
