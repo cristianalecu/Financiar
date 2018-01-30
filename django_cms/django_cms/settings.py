@@ -13,11 +13,6 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 gettext = lambda s: s
 
-DATA_DIR = os.path.dirname(os.path.dirname(__file__))
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'd3=9i-msen!+6yrh^qx4ces#(a+d&i3j-o0#f-v3e5fp9-ob8q'
 
@@ -112,20 +107,30 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
+
+DATA_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(DATA_DIR, 'media')
 STATIC_ROOT = os.path.join(DATA_DIR, 'static')
 
+# Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'django_cms', 'static'),
 )
 SITE_ID = 1
-
 
 TEMPLATES = [
     {
@@ -153,8 +158,7 @@ TEMPLATES = [
         },
     },
 ]
-
-
+    
 MIDDLEWARE_CLASSES = (
     'cms.middleware.utils.ApphookReloadMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -168,6 +172,9 @@ MIDDLEWARE_CLASSES = (
     'cms.middleware.page.CurrentPageMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
     'cms.middleware.language.LanguageCookieMiddleware',
+    # Simplified static file serving.
+    # https://warehouse.python.org/project/whitenoise/
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 )
 
 LANGUAGES = (
@@ -236,6 +243,11 @@ DATABASES = {
         'USER': ''
     }
 }
+
+# Update database configuration with $DATABASE_URL.
+import dj_database_url
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
 
 MIGRATION_MODULES = {
     
